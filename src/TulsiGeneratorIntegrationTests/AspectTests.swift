@@ -80,8 +80,8 @@ class TulsiSourcesAspectTests: BazelIntegrationTestCase {
                          "APPLIB_ADDITIONAL_DEFINE",
                          "APPLIB_ANOTHER_DEFINE=2"])
         .hasIncludes(["tulsi_test/ApplicationLibrary/includes",
-                      "_tulsi-includes/x/x/tulsi_test/ApplicationLibrary/includes",
-                      "_tulsi-includes/x/x/"])
+                      "_tulsi-xcode/bazel/codegen/tulsi_test/ApplicationLibrary/includes",
+                      "_tulsi-xcode/bazel/codegen/"])
         .hasAttribute(.supporting_files,
                       value: [["is_dir": false,
                                "path": "tulsi_test/ApplicationLibrary/Base.lproj/One.storyboard",
@@ -182,11 +182,11 @@ class TulsiSourcesAspectTests: BazelIntegrationTestCase {
                          "LIBRARY_VALUE_WITH_SPACES=Value with spaces",
                          "A=BINARY_DEFINE"])
         .hasIncludes(["tulsi_test/Application/includes/first/include",
-                      "tulsi-includes/x/x/tulsi_test/Application/includes/first/include",
+                      "tulsi-includes/bazel/codegen/tulsi_test/Application/includes/first/include",
                       "tulsi_test/Application/includes/second/include",
-                      "tulsi-includes/x/x/tulsi_test/Application/includes/second/include",
+                      "tulsi-includes/bazel/codegen/tulsi_test/Application/includes/second/include",
                       "tulsi_test/SubLibraryWithDifferentDefines/includes",
-                      "tulsi-includes/x/x/tulsi_test/SubLibraryWithDifferentDefines/includes"])
+                      "tulsi-includes/bazel/codegen/tulsi_test/SubLibraryWithDifferentDefines/includes"])
         .hasAttribute(.supporting_files,
                       value: [["is_dir": false,
                                "path": "tulsi_test/Application/Base.lproj/Localizable.strings",
@@ -283,7 +283,7 @@ class TulsiSourcesAspectTests: BazelIntegrationTestCase {
                                       "-D\"SubLibraryWithDifferentDefines_PREQUOTED=Prequoted with spaces\""] as NSArray)
         .hasObjcDefines(["SubLibraryWithDifferentDefines=1"])
         .hasIncludes(["tulsi_test/SubLibraryWithDifferentDefines/includes",
-                      "tulsi-includes/x/x/tulsi_test/SubLibraryWithDifferentDefines/includes"])
+                      "tulsi-includes/bazel/codegen/tulsi_test/SubLibraryWithDifferentDefines/includes"])
 
     checker.assertThat("//tulsi_test:NonPropagatedLibrary")
         .hasSources(["tulsi_test/NonPropagatedLibrary/srcs/non_propagated.m"])
@@ -369,8 +369,8 @@ class TulsiSourcesAspectTests: BazelIntegrationTestCase {
     checker.assertThat("//tulsi_test:ApplicationLibrary")
       .hasSources(["tulsi_test/Library/srcs/main.m"])
       .hasIncludes(["tulsi_test/Library/includes/one/include",
-                    "_tulsi-includes/x/x/tulsi_test/Library/includes/one/include",
-                    "_tulsi-includes/x/x/"])
+                    "_tulsi-xcode/bazel/codegen/tulsi_test/Library/includes/one/include",
+                    "_tulsi-xcode/bazel/codegen/"])
 
     checker.assertThat("//tulsi_test:WatchApplication")
       .dependsOn("//tulsi_test:WatchExtension")

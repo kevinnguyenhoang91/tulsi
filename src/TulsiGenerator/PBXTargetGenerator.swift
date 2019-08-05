@@ -181,7 +181,7 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
   }()
 
   /// The path to the Tulsi generated outputs root. For more information see tulsi_aspects.bzl
-  let tulsiIncludesPath = "_tulsi-includes/x/x"
+  let tulsiIncludesPath = "_tulsi-xcode/bazel/codegen"
 
   let project: PBXProject
   let buildScriptPath: String
