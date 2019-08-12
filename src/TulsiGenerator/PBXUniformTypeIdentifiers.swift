@@ -22,6 +22,7 @@ let FileExtensionToUTI = [
   "H": "sourcecode.cpp.h",
   "M": "sourcecode.cpp.objcpp",
   "a": "archive.ar",
+  "lo": "archive.ar",
   "ada": "sourcecode.ada",
   "adb": "sourcecode.ada",
   "ads": "sourcecode.ada",

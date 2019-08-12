@@ -7,6 +7,8 @@ build --xcode_version=10.2.1
 build --define=RULES_SWIFT_BUILD_DUMMY_WORKER=1
 build --strategy=SwiftCompile=local
 
+build --strategy=SwiftCompile=standalone
+
 # Stop gap for https://github.com/bazelbuild/tulsi/issues/94.
 # See also: https://github.com/bazelbuild/rules_apple/issues/456.
 build "--host_force_python=PY2"
