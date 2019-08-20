@@ -1567,12 +1567,12 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
       target.buildPhases.append(buildPhase)
     }
 
-    if let legacyTarget = bazelCleanScriptTarget {
-      target.createDependencyOn(legacyTarget,
-                                proxyType: PBXContainerItemProxy.ProxyType.targetReference,
-                                inProject: project,
-                                first: true)
-    }
+    // if let legacyTarget = bazelCleanScriptTarget {
+    //   target.createDependencyOn(legacyTarget,
+    //                             proxyType: PBXContainerItemProxy.ProxyType.targetReference,
+    //                             inProject: project,
+    //                             first: true)
+    // }
 
     return target
   }
