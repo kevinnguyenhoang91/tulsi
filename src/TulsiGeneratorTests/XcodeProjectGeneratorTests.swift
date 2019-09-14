@@ -37,6 +37,7 @@ class XcodeProjectGeneratorTests: XCTestCase {
   let resourceURLs = XcodeProjectGenerator.ResourceSourcePathURLs(
       buildScript: URL(fileURLWithPath: "/scripts/Build"),
       cleanScript: URL(fileURLWithPath: "/scripts/Clean"),
+      swiftlintScript: URL(fileURLWithPath: "/scripts/SwiftLint"),
       extraBuildScripts: [URL(fileURLWithPath: "/scripts/Logging")],
       iOSUIRunnerEntitlements: URL(fileURLWithPath: "/generatedProjectResources/iOSXCTRunner.entitlements"),
       macOSUIRunnerEntitlements: URL(fileURLWithPath: "/generatedProjectResources/macOSXCTRunner.entitlements"),
@@ -518,6 +519,10 @@ final class MockPBXTargetGenerator: PBXTargetGeneratorProtocol {
 
   func generateBazelCleanTarget(_ scriptPath: String, workingDirectory: String,
                                 startupOptions: [String]) {
+  }
+  
+  func generateSwiftLintTarget(_ scriptPath: String, workingDirectory: String,
+                               startupOptions: [String]) {
   }
 
   func generateTopLevelBuildConfigurations(_ buildSettingOverrides: [String: String]) {
