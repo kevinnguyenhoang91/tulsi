@@ -41,18 +41,14 @@ class XcodeProjectGeneratorTests: XCTestCase {
   let resourceURLs = XcodeProjectGenerator.ResourceSourcePathURLs(
     buildScript: URL(fileURLWithPath: "/scripts/Build"),
     cleanScript: URL(fileURLWithPath: "/scripts/Clean"),
+    swiftlintScript: URL(fileURLWithPath: "/scripts/SwiftLint"),
     extraBuildScripts: [URL(fileURLWithPath: "/scripts/Logging")],
-    iOSUIRunnerEntitlements: URL(
-      fileURLWithPath: "/generatedProjectResources/iOSXCTRunner.entitlements"),
-    macOSUIRunnerEntitlements: URL(
-      fileURLWithPath: "/generatedProjectResources/macOSXCTRunner.entitlements"),
+    iOSUIRunnerEntitlements: URL(fileURLWithPath: "/generatedProjectResources/iOSXCTRunner.entitlements"),
+    macOSUIRunnerEntitlements: URL(fileURLWithPath: "/generatedProjectResources/macOSXCTRunner.entitlements"),
     stubInfoPlist: URL(fileURLWithPath: "/generatedProjectResources/StubInfoPlist.plist"),
-    stubIOSAppExInfoPlistTemplate: URL(
-      fileURLWithPath: "/generatedProjectResources/stubIOSAppExInfoPlist.plist"),
-    stubWatchOS2InfoPlist: URL(
-      fileURLWithPath: "/generatedProjectResources/StubWatchOS2InfoPlist.plist"),
-    stubWatchOS2AppExInfoPlist: URL(
-      fileURLWithPath: "/generatedProjectResources/StubWatchOS2AppExInfoPlist.plist"),
+    stubIOSAppExInfoPlistTemplate: URL(fileURLWithPath: "/generatedProjectResources/stubIOSAppExInfoPlist.plist"),
+    stubWatchOS2InfoPlist: URL(fileURLWithPath: "/generatedProjectResources/StubWatchOS2InfoPlist.plist"),
+    stubWatchOS2AppExInfoPlist: URL(fileURLWithPath: "/generatedProjectResources/StubWatchOS2AppExInfoPlist.plist"),
     bazelWorkspaceFile: URL(fileURLWithPath: "/WORKSPACE"),
     tulsiPackageFiles: [URL(fileURLWithPath: "/tulsi/tulsi_aspects.bzl")])
 
@@ -605,6 +601,10 @@ final class MockPBXTargetGenerator: PBXTargetGeneratorProtocol {
     _ scriptPath: String, workingDirectory: String,
     startupOptions: [String]
   ) {
+  }
+  
+  func generateSwiftLintTarget(_ scriptPath: String, workingDirectory: String,
+                               startupOptions: [String]) {
   }
 
   func generateTopLevelBuildConfigurations(_ buildSettingOverrides: [String: String]) {
