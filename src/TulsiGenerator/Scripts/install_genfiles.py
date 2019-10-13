@@ -72,10 +72,10 @@ class Installer(object):
       if not os.path.exists(src):
         continue
 
-      # The /x/x/ part is here to match the number of directory components
+      # The /bazel/codegen/ part is here to match the number of directory components
       # between tulsi root and bazel root. See tulsi_aspects.bzl for futher
       # explanation.
-      dst = os.path.join(tulsi_root, 'x/x/', link_path)
+      dst = os.path.join(tulsi_root, 'bazel/codegen/', link_path)
 
       dst_dir = os.path.dirname(dst)
       if not os.path.exists(dst_dir):
