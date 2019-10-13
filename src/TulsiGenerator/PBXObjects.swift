@@ -1327,22 +1327,23 @@ final class PBXProject: PBXObjectProtocol {
       // reference by Xcode (e.g., .xcassets bundles) instead of as a PBXGroup.
       let currentComponent = components[i]
 
-      // Support per-locale files (lprojs), which are represented in PBXVariantGroups.
-      if currentComponent.pbPathExtension == "lproj" {
-        let lprojName = currentComponent.replacingOccurrences(of: ".lproj", with: "")
-        let name = components[i + 1] // Assume it's the next (and last).
+      // Xcode 11 has an issue with this, disable for now
+      // // Support per-locale files (lprojs), which are represented in PBXVariantGroups.
+      // if currentComponent.pbPathExtension == "lproj" {
+      //   let lprojName = currentComponent.replacingOccurrences(of: ".lproj", with: "")
+      //   let name = components[i + 1] // Assume it's the next (and last).
 
-        let variantGroup = group.getOrCreateChildVariantGroupByName(name)
-        accessedGroups.insert(variantGroup)
+      //   let variantGroup = group.getOrCreateChildVariantGroupByName(name)
+      //   accessedGroups.insert(variantGroup)
 
-        let fileRef = variantGroup.getOrCreateFileReferenceBySourceTree(.Group,
-                                                                        path: path,
-                                                                        name: lprojName)
-        if let ext = name.pbPathExtension, let uti = DirExtensionToUTI[ext] {
-          fileRef.fileTypeOverride = uti
-        }
-        return (accessedGroups, fileRef)
-      }
+      //   let fileRef = variantGroup.getOrCreateFileReferenceBySourceTree(.Group,
+      //                                                                   path: path,
+      //                                                                   name: lprojName)
+      //   if let ext = name.pbPathExtension, let uti = DirExtensionToUTI[ext] {
+      //     fileRef.fileTypeOverride = uti
+      //   }
+      //   return (accessedGroups, fileRef)
+      // }
 
       // This will naively create a bundle grouping rather than including the per-locale strings.
       if let ext = currentComponent.pbPathExtension, let uti = DirExtensionToUTI[ext] {
