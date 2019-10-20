@@ -762,17 +762,6 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
                                                         buildToolPath: "\(scriptPath)",
                                                         buildArguments: buildArgs,
                                                         buildWorkingDirectory: workingDirectory)
-
-    for target: PBXTarget in project.allTargets {
-      if target === bazelCleanScriptTarget {
-        continue
-      }
-
-      target.createDependencyOn(bazelCleanScriptTarget!,
-                                proxyType: PBXContainerItemProxy.ProxyType.targetReference,
-                                inProject: project,
-                                first: true)
-    }
   }
 
   func generateTopLevelBuildConfigurations(_ buildSettingOverrides: [String: String] = [:]) {
@@ -1298,6 +1287,14 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
       let fullPath = module.fullPath as NSString
       let includePath = fullPath.deletingLastPathComponent
       swiftIncludes.add("$(\(PBXTargetGenerator.BazelWorkspaceSymlinkVarName))/\(includePath)")
+    }
+    
+    for module in ruleEntry.objCModuleMaps {
+      let fullPath = module.fullPath as NSString
+      let includePath = fullPath.deletingLastPathComponent
+      if includePath.contains(".framework") {
+        swiftIncludes.add("$(\(PBXTargetGenerator.BazelWorkspaceSymlinkVarName))/\(includePath)")
+      }
     }
   }
 
