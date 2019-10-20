@@ -554,7 +554,7 @@ final class XcodeProjectGenerator {
       referencePatcher.patchBazelRelativeReferences(xcodeProject, workspaceRootURL)
     }
     profileAction("patching_external_repository_references") {
-      referencePatcher.patchExternalRepositoryReferences(xcodeProject)
+      referencePatcher.patchExternalRepositoryReferences(xcodeProject, workspaceInfoExtractor.bazelExecutionRoot)
     }
     profileAction("updating_dbgshellcommands") {
       do {
