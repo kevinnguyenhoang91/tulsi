@@ -230,6 +230,7 @@ final class XcodeProjectGenerator {
                                    rules: projectInfo.buildRuleEntries.filter { $0.pbxTargetType?.isiOSAppExtension ?? false },
                                    plistPaths: plistPaths)
     linkTulsiWorkspace()
+    //copyTulsiWorkspace()
     return projectURL
   }
 
@@ -676,6 +677,46 @@ final class XcodeProjectGenerator {
                                           comment: "Warning shown when failing to update the tulsi-workspace symlink in %1$@ to the Bazel execution root, additional context %2$@.",
                                           context: config.projectName,
                                           values: path, "Creating symlink failed. Is it already present?")
+    }
+  }
+  
+  private func copyTulsiWorkspace() {
+    // Don't create the tulsi-workspace symlink for tests.
+    guard !self.redactWorkspaceSymlink else { return }
+
+    let pathFileURL = workspaceRootURL.appendingPathComponent(PBXTargetGenerator.TulsiWorkspacePath,
+                                                       isDirectory: false)
+                                                       
+    let pathFolderURL = workspaceRootURL.appendingPathComponent(PBXTargetGenerator.TulsiWorkspacePath,
+                                                       isDirectory: true)
+                                                       
+    let bazelExecRoot = self.workspaceInfoExtractor.bazelExecutionRoot
+
+    do {
+      try fileManager.removeItem(atPath: pathFolderURL.path)
+      try fileManager.removeItem(atPath: pathFileURL.path)   
+    } catch {}
+      
+    do {
+      try fileManager.createDirectory(atPath: pathFolderURL.path,
+                                      withIntermediateDirectories: true,
+                                      attributes: nil)
+  
+      let bazel_out_URL = pathFolderURL.appendingPathComponent("bazel-out", isDirectory: true)
+      let bazel_out_dest = "\(bazelExecRoot)/bazel-out"
+      
+      let external_path = "\(bazelExecRoot)/../../external"
+      let external_URL_dest = pathFolderURL.appendingPathComponent("external", isDirectory: true)
+
+      try self.fileManager.createSymbolicLink(atPath: bazel_out_URL.path, withDestinationPath: bazel_out_dest)
+      
+      try fileManager.copyItem(atPath: external_path, toPath: external_URL_dest.path)
+      
+    } catch {
+      self.localizedMessageLogger.warning("UpdatingTulsiWorkspaceSymlinkFailed",
+                                          comment: "Warning shown when failing to update the tulsi-workspace symlink in %1$@ to the Bazel execution root, additional context %2$@.",
+                                          context: config.projectName,
+                                          values: pathFolderURL.path, "Copy Tulsi Workspace failed! \(error)")
     }
   }
 
