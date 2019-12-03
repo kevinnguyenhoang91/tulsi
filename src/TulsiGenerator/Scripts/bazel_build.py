@@ -710,7 +710,11 @@ class BazelBuildBridge(object):
           else:
             output_line = '%s/%s' % (self.workspace_root, output_line)
         if output_line.startswith("warning:") and output_line.endswith(".pcm: No such file or directory"):
-            output_line = output_line.replace("No such file or directory", "Module cache not found. Please ignore this warning.")
+            output_line = ""
+        if output_line.startswith("warning:") and output_line.find("cronet") > -1 and output_line.find("unable to open object file") > -1:
+            output_line = ""
+        if output_line.startswith("note:") and output_line.find("swift_module_cache") > -1 and output_line.find(".pcm") > -1:
+            output_line = ""
         return output_line
       patch_xcode_parsable_line = PatchOutputLine
 
