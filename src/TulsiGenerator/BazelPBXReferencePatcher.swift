@@ -62,18 +62,64 @@ final class BazelPBXReferencePatcher {
     
     guard let externalGroup = mainGroup.childGroupsByName["external"] else { return }
     mainGroup.removeChild(externalGroup)
+    
+    let externalGroupResolvedPath = resolvePathFromBazelExecRoot("external")
     let newExternalGroup = mainGroup.getOrCreateChildGroupByName("external",
-                                                                 path: nil)
-                                                                 
+                                                                  path: externalGroupResolvedPath,
+                                                                  sourceTree: .Group)
+
     // The external directory may contain files such as a WORKSPACE file, but we only patch folders
     let childGroups = externalGroup.children.filter { $0 is PBXGroup } as! [PBXGroup]
 
     for child in childGroups {
-      let resolvedPath = resolvePathFromBazelExecRoot("external/\(child.name)")
-      let newChild = newExternalGroup.getOrCreateChildGroupByName("\(child.name)",
-                                                           path: resolvedPath,
-                                                           sourceTree: .Group)
+      let newChild = newExternalGroup.getOrCreateChildGroupByName(child.name,
+                                                                  path: child.name,
+                                                                  sourceTree: .Group)
       newChild.migrateChildrenOfGroup(child)
+    }
+  }
+  
+  func patchExternalRepositoryReferencesVersioning(_ xcodeProject: PBXProject) {
+    let mainGroup = xcodeProject.mainGroup
+    
+    guard let externalGroup = mainGroup.childGroupsByName["external"] else { return }
+    mainGroup.removeChild(externalGroup)
+    
+    let externalGroupResolvedPath = resolvePathFromBazelExecRoot("external")
+    let newExternalGroup = mainGroup.getOrCreateChildGroupByName("external",
+                                                                  path: externalGroupResolvedPath,
+                                                                  sourceTree: .Group)
+
+    // The external directory may contain files such as a WORKSPACE file, but we only patch folders
+    let childGroups = externalGroup.children.filter { $0 is PBXGroup } as! [PBXGroup]
+
+    for child in childGroups {
+      if child.name == "vinone" {
+        let vinoneChildGroups = child.children.filter { $0 is PBXGroup } as! [PBXGroup]
+        
+        for vinoneChild in vinoneChildGroups {
+          let newChild = mainGroup.getOrCreateChildGroupByName("\(vinoneChild.name)_",
+                                                            path: vinoneChild.name,
+                                                            sourceTree: .Group)
+          newChild.migrateChildrenOfGroup(vinoneChild)
+        }
+      } else {
+        if child.name.hasSuffix("vinone") {
+            let path = child.name
+              .replacingOccurrences(of: "_", with: "/")
+              .replacingOccurrences(of: "_vinone", with: "")
+
+            let newChild = mainGroup.getOrCreateChildGroupByName("\(child.name)_",
+                                                              path: path,
+                                                              sourceTree: .Group)
+            newChild.migrateChildrenOfGroup(child)
+        } else {
+          let newChild = newExternalGroup.getOrCreateChildGroupByName("\(child.name)",
+                                                                      path: child.name,
+                                                                      sourceTree: .Group)
+          newChild.migrateChildrenOfGroup(child)
+        }
+      }
     }
   }
 }

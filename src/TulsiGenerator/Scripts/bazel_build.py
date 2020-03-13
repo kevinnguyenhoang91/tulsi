@@ -1599,7 +1599,7 @@ class BazelBuildBridge(object):
     # Remap relative paths from the workspace root.
     if self.normalized_prefix_map:
       # Take the normalized path and map that to Xcode-visible sources.
-      source_maps.append(('./', self._NormalizePath(self.workspace_root + "/tulsi-workspace")))
+      source_maps.append(('./', self._NormalizePath(self.workspace_root)))
 
     # Find the binaries within the dSYM bundle. UUIDs will match that of the
     # binary it was based on.
