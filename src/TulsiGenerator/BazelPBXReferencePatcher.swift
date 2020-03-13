@@ -97,7 +97,7 @@ final class BazelPBXReferencePatcher {
       let childPathURL = URL(fileURLWithPath: "\(bazelExecRoot)/../../external/\(child.name)", isDirectory: false)
       let resolvedPath = childPathURL.resolvingSymlinksInPath().path
       
-      if resolvedPath.hasPrefix("/Users/") {
+      if !resolvedPath.hasPrefix("/var/") {
         let newChild = mainGroup.getOrCreateChildGroupByName(child.name,
                                                              path: resolvedPath,
                                                              sourceTree: .Group)
