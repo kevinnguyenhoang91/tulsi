@@ -63,10 +63,10 @@ final class BazelPBXReferencePatcher {
     guard let externalGroup = mainGroup.childGroupsByName["external"] else { return }
     mainGroup.removeChild(externalGroup)
     
-    let externalGroupResolvedPath = "\(bazelExecRoot)/../../external"
+    let externalGroupResolvedPath = resolvePathFromBazelExecRoot("external")
     let newExternalGroup = mainGroup.getOrCreateChildGroupByName("external",
                                                                   path: externalGroupResolvedPath,
-                                                                  sourceTree: .Absolute)
+                                                                  sourceTree: .Group)
 
     // The external directory may contain files such as a WORKSPACE file, but we only patch folders
     let childGroups = externalGroup.children.filter { $0 is PBXGroup } as! [PBXGroup]
@@ -85,10 +85,10 @@ final class BazelPBXReferencePatcher {
     guard let externalGroup = mainGroup.childGroupsByName["external"] else { return }
     mainGroup.removeChild(externalGroup)
     
-    let externalGroupResolvedPath = "\(bazelExecRoot)/../../external"
+    let externalGroupResolvedPath = resolvePathFromBazelExecRoot("external")
     let newExternalGroup = mainGroup.getOrCreateChildGroupByName("external",
                                                                  path: externalGroupResolvedPath,
-                                                                 sourceTree: .Absolute)
+                                                                 sourceTree: .Group)
 
     // The external directory may contain files such as a WORKSPACE file, but we only patch folders
     let childGroups = externalGroup.children.filter { $0 is PBXGroup } as! [PBXGroup]
@@ -100,12 +100,12 @@ final class BazelPBXReferencePatcher {
       if resolvedPath.hasPrefix("/Users/") {
         let newChild = mainGroup.getOrCreateChildGroupByName(child.name,
                                                              path: resolvedPath,
-                                                             sourceTree: .Absolute)
+                                                             sourceTree: .Group)
         newChild.migrateChildrenOfGroup(child)
       } else {
         let newChild = newExternalGroup.getOrCreateChildGroupByName(child.name,
                                                                     path: resolvedPath,
-                                                                    sourceTree: .Absolute)
+                                                                    sourceTree: .Group)
         newChild.migrateChildrenOfGroup(child)
       }
     }
