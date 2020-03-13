@@ -1713,6 +1713,9 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
         "NAME_REGEX=\".*\(targetName).*\"\n" +
         "if [[ \"${COVERAGE_FILTER_REGEX}\" != \"\" ]]; then\n" +
         "    NAME_REGEX=\"$COVERAGE_FILTER_REGEX\"\n" +
+        "else\n" +
+        "    echo \"warning: Ignore generating HTML code coverage report because filter regex is empty.\"\n" +
+        "    exit 0\n" +
         "fi\n" +
         "xcrun llvm-cov show \\\n" +
         "    -format=html \\\n" +
