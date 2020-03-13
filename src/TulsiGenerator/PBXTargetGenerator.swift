@@ -738,16 +738,16 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
                                                         buildArguments: buildArgs,
                                                         buildWorkingDirectory: workingDirectory)
 
-    // for target: PBXTarget in project.allTargets {
-    //   if target === bazelCleanScriptTarget {
-    //     continue
-    //   }
+    for target: PBXTarget in project.allTargets {
+      if target === bazelCleanScriptTarget {
+        continue
+      }
 
-    //   target.createDependencyOn(bazelCleanScriptTarget!,
-    //                             proxyType: PBXContainerItemProxy.ProxyType.targetReference,
-    //                             inProject: project,
-    //                             first: true)
-    // }
+      target.createDependencyOn(bazelCleanScriptTarget!,
+                                proxyType: PBXContainerItemProxy.ProxyType.targetReference,
+                                inProject: project,
+                                first: true)
+    }
   }
   
   func generateSwiftLintTarget(_ scriptPath: String, workingDirectory: String = "",
@@ -763,16 +763,16 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
                                                         buildArguments: buildArgs,
                                                         buildWorkingDirectory: workingDirectory)
 
-    // for target: PBXTarget in project.allTargets {
-    //   if target === bazelCleanScriptTarget {
-    //     continue
-    //   }
+    for target: PBXTarget in project.allTargets {
+      if target === bazelCleanScriptTarget {
+        continue
+      }
 
-    //   target.createDependencyOn(bazelCleanScriptTarget!,
-    //                             proxyType: PBXContainerItemProxy.ProxyType.targetReference,
-    //                             inProject: project,
-    //                             first: true)
-    // }
+      target.createDependencyOn(bazelCleanScriptTarget!,
+                                proxyType: PBXContainerItemProxy.ProxyType.targetReference,
+                                inProject: project,
+                                first: true)
+    }
   }
 
   func generateTopLevelBuildConfigurations(_ buildSettingOverrides: [String: String] = [:]) {
@@ -1626,12 +1626,12 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
       target.buildPhases.append(buildPhase)
     }
 
-    // if let legacyTarget = bazelCleanScriptTarget {
-    //   target.createDependencyOn(legacyTarget,
-    //                             proxyType: PBXContainerItemProxy.ProxyType.targetReference,
-    //                             inProject: project,
-    //                             first: true)
-    // }
+    if let legacyTarget = bazelCleanScriptTarget {
+      target.createDependencyOn(legacyTarget,
+                                proxyType: PBXContainerItemProxy.ProxyType.targetReference,
+                                inProject: project,
+                                first: true)
+    }
 
     return target
   }
