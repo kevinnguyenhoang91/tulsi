@@ -37,6 +37,7 @@ final class XcodeProjectGenerator {
     let buildScript: URL  // The script to run on "build" actions.
     let cleanScript: URL  // The script to run on "clean" actions.
     let swiftlintScript: URL  // The script to run on swiftlint actions.
+    let codeCoverageReportScript: URL  // The script to run on swiftlint actions.
     let extraBuildScripts: [URL] // Any additional scripts to install into the project bundle.
     let iOSUIRunnerEntitlements: URL  // Entitlements file template for iOS UI Test runner apps.
     let macOSUIRunnerEntitlements: URL  // Entitlements file template for macOS UI Test runner apps.
@@ -71,6 +72,7 @@ final class XcodeProjectGenerator {
   private static let SettingsScript = "bazel_build_settings.py"
   private static let CleanScript = "bazel_clean.sh"
   private static let SwiftLintScript = "swiftlint.sh"
+  private static let CodeCoverageReportScript = "code_coverage_report.sh"
   private static let ShellCommandsUtil = "bazel_cache_reader"
   private static let ShellCommandsCleanScript = "clean_symbol_cache"
   private static let LLDBInitBootstrapScript = "bootstrap_lldbinit"
@@ -392,7 +394,8 @@ final class XcodeProjectGenerator {
     let buildScriptPath = "${PROJECT_FILE_PATH}/\(XcodeProjectGenerator.ScriptDirectorySubpath)/\(XcodeProjectGenerator.BuildScript)"
     let cleanScriptPath = "${PROJECT_FILE_PATH}/\(XcodeProjectGenerator.ScriptDirectorySubpath)/\(XcodeProjectGenerator.CleanScript)"
     let swiftlintScriptPath = "${PROJECT_FILE_PATH}/\(XcodeProjectGenerator.ScriptDirectorySubpath)/\(XcodeProjectGenerator.SwiftLintScript)"
-
+    let codeCoverageReportScriptPath = "${PROJECT_FILE_PATH}/\(XcodeProjectGenerator.ScriptDirectorySubpath)/\(XcodeProjectGenerator.CodeCoverageReportScript)"
+    
     let generator = pbxTargetGeneratorType.init(bazelPath: config.bazelURL.path,
                                                 bazelBinPath: workspaceInfoExtractor.bazelBinPath,
                                                 project: xcodeProject,
@@ -547,6 +550,12 @@ final class XcodeProjectGenerator {
     try profileAction("generating_build_targets") {
       try generator.generateBuildTargetsForRuleEntries(targetRules,
                                                        ruleEntryMap: ruleEntryMap)
+    }
+    
+    try profileAction("generating_code_coverage_report_targets") {
+      try generator.generateCodeCoverageTargetsForRuleEntries(targetRules,
+                                                              codeCoverageReportScriptPath: codeCoverageReportScriptPath,
+                                                              workingDirectory: workingDirectory)
     }
 
     let referencePatcher = BazelXcodeProjectPatcher(fileManager: fileManager)
@@ -786,68 +795,10 @@ final class XcodeProjectGenerator {
       var postActionScripts: [XcodeActionType: String] = [:]
       postActionScripts[.BuildAction] = config.options[.BuildActionPostActionScript, ruleEntry.label.value] ?? nil
       postActionScripts[.LaunchAction] = config.options[.LaunchActionPostActionScript, ruleEntry.label.value] ?? nil
-      
-      if BazelBuildSettingsFeatures.enabledFeatures(options: config.options).contains(.HTMLCodeCoverage) {
-        postActionScripts[.TestAction] = createGenerateHTMLCodeCoverageTestBuildPhase(ruleEntry) + (config.options[.TestActionPostActionScript, ruleEntry.label.value] ?? "")
-      } else {
-        postActionScripts[.TestAction] = config.options[.TestActionPostActionScript, ruleEntry.label.value] ?? nil
-      }
-      
+      postActionScripts[.TestAction] = config.options[.TestActionPostActionScript, ruleEntry.label.value] ?? nil
       return postActionScripts
     }
     
-    func codeCoverageFilterRegexes(for ruleEntry: RuleEntry) -> [String: String] {
-      var codeCoverageFilterRegexes: [String: String] = [:]
-      config.options[.CodeCoverageFilterRegex, ruleEntry.label.value]?.components(separatedBy: ",").forEach() { keyValueString in
-        let components = keyValueString.components(separatedBy: "=")
-        let key = components.first ?? ""
-        if !key.isEmpty {
-          let value = components[1..<components.count].joined(separator: "=")
-          codeCoverageFilterRegexes[key] = value
-        }
-      }
-      return codeCoverageFilterRegexes
-    }
-    
-    func createGenerateHTMLCodeCoverageTestBuildPhase(_ entry: RuleEntry) -> String {
-      let bazelRootURL = URL(fileURLWithPath: "\(workspaceRootURL.resolvingSymlinksInPath().path)/bazel-out/../../", isDirectory: false)
-      let bazelRootPath = "/private\(bazelRootURL.resolvingSymlinksInPath().path)"
-      var targetName = entry.label.targetName ?? ""
-      
-      let coverageRegexes = codeCoverageFilterRegexes(for: entry)
-      var coverageFilterRegex = ""
-      if let regexVar = coverageRegexes[targetName] {
-        coverageFilterRegex = regexVar
-      }
-      
-      let shellScript =
-          "mkdir -p \"$BUILT_PRODUCTS_DIR/html_coverage\" \\n" +
-          "find \"$CLANG_PROFILE_DATA_DIRECTORY\" -type f -name \"Coverage.profdata\" -exec cp -RLf {} \"$BUILT_PRODUCTS_DIR/html_coverage/\" \\; \\n" +
-          "if [ ! -f \"$BUILT_PRODUCTS_DIR/html_coverage/Coverage.profdata\" ]; then \\n" +
-          "    exit 0 \\n" + 
-          "fi \\n" +
-          "COVERAGE_FILTER_REGEX=\"\(coverageFilterRegex)\" \\n" +
-          "NAME_REGEX=\".*\(targetName).*\" \\n" +
-          "if [[ \"${COVERAGE_FILTER_REGEX}\" != \"\" ]]; then \\n" + 
-          "    NAME_REGEX=\"$COVERAGE_FILTER_REGEX\" \\n" +
-          "else \\n" +
-          "    echo \"warning: Ignore generating HTML code coverage report because filter regex is empty.\" \\n" +
-          "    exit 0 \\n" + 
-          "fi \\n" +
-          "xcrun llvm-cov show " +
-          "-format=html " +
-          "-instr-profile \"$BUILT_PRODUCTS_DIR/html_coverage/Coverage.profdata\" " +
-          "\"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\" " +
-          "-output-dir=\"$BUILT_PRODUCTS_DIR/html_coverage/report\" " +
-          "-ignore-filename-regex=\".*bazel-out.*|.*Tests.*\" " +
-          "-name-regex=\"$NAME_REGEX\" " +
-          "-path-equivalence=\(bazelRootPath)/vinone_ios/,\(bazelRootPath)/vinone_ios_workspace \\n" +
-          "sed -i '' \"s/<h2>Coverage Report<\\/h2>/<h2>Coverage Report ($TARGETNAME)<\\/h2>/g\" \"$BUILT_PRODUCTS_DIR/html_coverage/report/index.html\" \\n" +
-          "open $BUILT_PRODUCTS_DIR/html_coverage/report/index.html"
-
-      return shellScript
-    }
-
     // Build a map of extension targets to hosts so the hosts may be referenced as additional build
     // requirements. This is necessary for watchOS2 targets (Xcode will spawn an error when
     // attempting to run the app without the scheme linkage, even though Bazel will create the
@@ -1319,6 +1270,7 @@ final class XcodeProjectGenerator {
       installFiles([(resourceURLs.buildScript, XcodeProjectGenerator.BuildScript),
                     (resourceURLs.cleanScript, XcodeProjectGenerator.CleanScript),
                     (resourceURLs.swiftlintScript, XcodeProjectGenerator.SwiftLintScript),
+                    (resourceURLs.codeCoverageReportScript, XcodeProjectGenerator.CodeCoverageReportScript),
                    ],
                    toDirectory: scriptDirectoryURL)
       installFiles(resourceURLs.extraBuildScripts.map { ($0, $0.lastPathComponent) },
