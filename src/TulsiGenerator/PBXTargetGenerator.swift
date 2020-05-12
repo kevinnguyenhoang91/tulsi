@@ -1285,6 +1285,12 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
       let testBuildPhase = createGenerateSwiftDummyFilesTestBuildPhase()
       target.buildPhases.append(testBuildPhase)
     }
+    
+    if enabledFeatures().contains(.HTMLCodeCoverage) { 
+      let cleanProfileDataPhase = createCleanCodeCoverageProfileDataBuildPhase()
+      target.buildPhases.append(cleanProfileDataPhase)
+    }
+    
     if !testSourceFileInfos.isEmpty || !testNonArcSourceFileInfos.isEmpty {
       // Create dummy dependency files for non-Swift code as Xcode expects Clang to generate them.
       let allSources = testSourceFileInfos + testNonArcSourceFileInfos
@@ -1715,6 +1721,18 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
     let buildPhase = PBXShellScriptBuildPhase(shellScript: shellScript, shellPath: "/bin/bash")
     buildPhase.showEnvVarsInLog = true
     buildPhase.mnemonic = "SwiftDummy"
+    return buildPhase
+  }
+  
+  private func createCleanCodeCoverageProfileDataBuildPhase() -> PBXShellScriptBuildPhase {
+    let shellScript =
+        "# Script to clean ProfileData folder in Product folder.\n" +
+        "set -eu\n" +
+        "rm -rf \"$BUILT_PRODUCTS_DIR/../../ProfileData\" || true"
+
+    let buildPhase = PBXShellScriptBuildPhase(shellScript: shellScript, shellPath: "/bin/bash")
+    buildPhase.showEnvVarsInLog = true
+    buildPhase.mnemonic = "CleanCoverageProfileData"
     return buildPhase
   }
   
