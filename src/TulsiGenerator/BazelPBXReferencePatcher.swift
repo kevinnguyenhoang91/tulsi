@@ -44,30 +44,17 @@ final class BazelPBXReferencePatcher {
     let mainGroup = xcodeProject.mainGroup
     guard let externalGroup = mainGroup.childGroupsByName["external"] else { return }
 
-    // // The external directory may contain files such as a WORKSPACE file, but we only patch folders
-    // let childGroups = externalGroup.children.filter { $0 is PBXGroup } as! [PBXGroup]
+    // The external directory may contain files such as a WORKSPACE file, but we only patch folders
+    let childGroups = externalGroup.children.filter { $0 is PBXGroup } as! [PBXGroup]
 
-    // for child in childGroups {
-    //   let resolvedPath = resolvePathFromBazelExecRoot("external/\(child.name)")
-    //   let newChild = mainGroup.getOrCreateChildGroupByName("@\(child.name)",
-    //                                                        path: resolvedPath,
-    //                                                        sourceTree: .Group)
-    //   newChild.migrateChildrenOfGroup(child)
-    // }
-    // mainGroup.removeChild(externalGroup)
-    
-    // var queue = externalGroup.children
-
-    // while !queue.isEmpty {
-    //   let ref = queue.remove(at: 0)
-    //   if let group = ref as? PBXGroup {
-    //     // Queue up all children of the group so we can find all of their FileReferences.
-    //     queue.append(contentsOf: group.children)
-    //   } else if let file = ref as? PBXFileReference,
-    //             let fileURL = URL(string: file.path!, relativeTo: workspaceRootURL) {
-    //     self.patchFileReference(file: file, url: fileURL, workspaceRootURL: workspaceRootURL)
-    //   }
-    // }
+    for child in childGroups {
+      let resolvedPath = resolvePathFromBazelExecRoot("external/\(child.name)")
+      let newChild = mainGroup.getOrCreateChildGroupByName("@\(child.name)",
+                                                           path: resolvedPath,
+                                                           sourceTree: .Group)
+      newChild.migrateChildrenOfGroup(child)
+    }
+    mainGroup.removeChild(externalGroup)
   }
 
   func patchExternalRepositoryReferencesAlternative(_ xcodeProject: PBXProject) {

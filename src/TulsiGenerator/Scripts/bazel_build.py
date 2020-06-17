@@ -743,7 +743,11 @@ class BazelBuildBridge(object):
       def PatchOutputLine(output_line):
         output_line = PatchBazelDiagnosticStatements(output_line)
         if xcode_parsable_line_regex.match(output_line):
-          output_line = '%s/%s' % (self.workspace_root, output_line)
+          if output_line.startswith("external"):
+            tulsi_workspace = self.workspace_root + '/tulsi-workspace'
+            output_line = '%s/%s' % (tulsi_workspace, output_line)
+          else:
+            output_line = '%s/%s' % (self.workspace_root, output_line)
         return output_line
       patch_xcode_parsable_line = PatchOutputLine
     else:
@@ -1643,7 +1647,7 @@ class BazelBuildBridge(object):
     # Remap relative paths from the workspace root.
     if self.normalized_prefix_map:
       # Take the normalized path and map that to Xcode-visible sources.
-      source_maps.append(('./', self._NormalizePath(self.workspace_root)))
+      source_maps.append(('./', self._NormalizePath(self.workspace_root + "/tulsi-workspace")))
 
     # Find the binaries within the dSYM bundle. UUIDs will match that of the
     # binary it was based on.
