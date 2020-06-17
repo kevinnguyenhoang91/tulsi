@@ -1742,7 +1742,7 @@ class BazelBuildBridge(object):
                   of Tulsi debugging as strings ($1).
     """
     # All paths route to the "workspace root" for sources visible from Xcode.
-    sm_destpath = self.workspace_root
+    sm_destpath = self.workspace_root + "/tulsi-workspace/"
     if normalize:
       sm_destpath = self._NormalizePath(sm_destpath)
 
