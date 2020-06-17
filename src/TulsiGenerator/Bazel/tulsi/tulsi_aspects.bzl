@@ -176,7 +176,7 @@ def _convert_outpath_to_symlink_path(path):
     and the bazel_build.py script will link the artifacts into the correct
     location under it.
 
-    Tulsi root is located at WORKSPACE/bazel-exec-root-link/bazel-tulsi-includes/x/x/.
+    Tulsi root is located at WORKSPACE/bazel-exec-root-link/bazel-tulsi-includes/bazel/codegen/.
     The two "x" directories are stubs to match the number of path components, so
     that relative paths work with the new location. Some Bazel outputs, like
     module maps, use relative paths to reference other files in the build.
@@ -190,7 +190,7 @@ def _convert_outpath_to_symlink_path(path):
     In short, this method will transform
       bazel-out/ios-x86_64-min7.0/genfiles/foo
     to
-      bazel-tulsi-includes/x/x/foo
+      bazel-tulsi-includes/bazel/codegen/foo
 
     This is currently enabled for everything although it will only affect
     generated files.
@@ -205,13 +205,13 @@ def _convert_outpath_to_symlink_path(path):
     # Transform paths of the form:
     #   bazel-[whatever]/[platform-config]/symlink[/.*]
     # to:
-    #   bazel-tulsi-includes/x/x/symlink[/.*]
+    #   bazel-tulsi-includes/bazel/codegen/symlink[/.*]
     first_dash = path.find("-")
     components = path.split("/")
     if (len(components) > 2 and
         first_dash >= 0 and
         first_dash < len(components[0])):
-        return "bazel-tulsi-includes/x/x/" + "/".join(components[3:])
+        return "bazel-tulsi-includes/bazel/codegen/" + "/".join(components[3:])
     return path
 
 def _is_bazel_external_file(f):
