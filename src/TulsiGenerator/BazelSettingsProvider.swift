@@ -42,6 +42,9 @@ public enum BazelSettingFeature: Hashable, Pythonable {
   ///   the `Payload` directory, not its parent directory.
   ///   See https://github.com/bazelbuild/rules_apple/issues/733.
   case TreeArtifactOutputs
+  
+  /// Generate HTML code coverage for Test targets
+  case HTMLCodeCoverage
 
   /// TODO(b/111928007): Remove this and/or BazelSettingFeature once DebugPathNormalization is
   /// supported by all builds.
@@ -53,6 +56,8 @@ public enum BazelSettingFeature: Hashable, Pythonable {
         return "SwiftForcesdSYMs"
       case .TreeArtifactOutputs:
         return "TreeArtifactOutputs"
+      case .HTMLCodeCoverage:
+        return "HTMLCodeCoverage"
     }
   }
 
@@ -74,6 +79,8 @@ public enum BazelSettingFeature: Hashable, Pythonable {
         return true
       case .TreeArtifactOutputs:
         return true
+      case .HTMLCodeCoverage:
+        return true
     }
   }
 
@@ -84,6 +91,21 @@ public enum BazelSettingFeature: Hashable, Pythonable {
       case .SwiftForcesdSYMs:
         return false
       case .TreeArtifactOutputs:
+        return true
+      case .HTMLCodeCoverage:
+        return true
+    }
+  }
+  
+  public var supportsHTMLCodeCoverage: Bool {
+    switch self {
+      case .DebugPathNormalization:
+        return false
+      case .SwiftForcesdSYMs:
+        return false
+      case .TreeArtifactOutputs:
+        return false
+      case .HTMLCodeCoverage:
         return true
     }
   }
@@ -99,6 +121,7 @@ public enum BazelSettingFeature: Hashable, Pythonable {
       case .DebugPathNormalization: return ["--features=debug_prefix_map_pwd_is_dot"]
       case .SwiftForcesdSYMs: return ["--apple_generate_dsym"]
       case .TreeArtifactOutputs: return ["--define=apple.experimental.tree_artifact_outputs=1"]
+      case .HTMLCodeCoverage: return ["--swiftcopt=-profile-generate", "--swiftcopt=-profile-coverage-mapping", "--linkopt=-fprofile-instr-generate"]
     }
   }
 

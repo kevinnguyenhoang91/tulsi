@@ -833,6 +833,8 @@ final class XcodeProjectGenerator {
     let userSchemesURL = projectURL.appendingPathComponent(userSchemeSubpath)
     guard createDirectory(userSchemesURL) else { return }
 
+    let features = BazelBuildSettingsFeatures.enabledFeatures(options: config.options)
+    
     func updateManagementDictionary(
       _ dictionary: inout [String: Any],
       schemeName: String,
@@ -1002,7 +1004,8 @@ final class XcodeProjectGenerator {
                                  environmentVariables: schemeEnvVars,
                                  preActionScripts:preActionScripts(for: entry),
                                  postActionScripts:postActionScripts(for: entry),
-                                 localizedMessageLogger: localizedMessageLogger)
+                                 localizedMessageLogger: localizedMessageLogger,
+                                 codeCoverageEnabled: features.contains(.HTMLCodeCoverage))
         let xmlDocument = scheme.toXML()
 
         filename += target.name + ".xcscheme"
@@ -1075,7 +1078,9 @@ final class XcodeProjectGenerator {
       let additionalBuildTargets = indexerTargets.map() {
         ($0, projectBundleName, XcodeScheme.makeBuildActionEntryAttributes())
       }
-
+      
+      let features = BazelBuildSettingsFeatures.enabledFeatures(options: config.options)
+      
       let scheme = XcodeScheme(target: nil,
                                project: info.project,
                                projectBundleName: projectBundleName,
@@ -1083,7 +1088,8 @@ final class XcodeProjectGenerator {
                                additionalBuildTargets: additionalBuildTargets,
                                preActionScripts: [:],
                                postActionScripts: [:],
-                               localizedMessageLogger: localizedMessageLogger)
+                               localizedMessageLogger: localizedMessageLogger,
+                               codeCoverageEnabled: features.contains(.HTMLCodeCoverage))
       let xmlDocument = scheme.toXML()
 
       let data = xmlDocument.xmlData(options: XMLNode.Options.nodePrettyPrint)
@@ -1104,6 +1110,8 @@ final class XcodeProjectGenerator {
 
       let filename = suiteName + "_Suite.xcscheme"
 
+      let features = BazelBuildSettingsFeatures.enabledFeatures(options: config.options)
+      
       let url = xcschemesURL.appendingPathComponent(filename)
       let scheme = XcodeScheme(target: extractedHostTarget,
                                project: info.project,
@@ -1117,7 +1125,8 @@ final class XcodeProjectGenerator {
                                environmentVariables: environmentVariables(for: suite),
                                preActionScripts: preActionScripts(for: suite),
                                postActionScripts:postActionScripts(for: suite),
-                               localizedMessageLogger: localizedMessageLogger)
+                               localizedMessageLogger: localizedMessageLogger,
+                               codeCoverageEnabled: features.contains(.HTMLCodeCoverage))
       let xmlDocument = scheme.toXML()
 
 

@@ -46,6 +46,9 @@ public enum TulsiOptionKey: String {
 
       // Environment Variables used by the run phase of the generated scheme.
       EnvironmentVariables,
+      
+      // Code coverage report filter regex.
+      CodeCoverageFilterRegex,
 
       // Option to enable compilation after error.
       BazelContinueBuildingAfterError,
@@ -87,7 +90,10 @@ public enum TulsiOptionKey: String {
       PreBuildPhaseRunScript,
 
       // Custom build phase run script that runs after bazel build.
-      PostBuildPhaseRunScript
+      PostBuildPhaseRunScript,
+      
+      // Enable code coverage HTML report
+      HTMLCodeCoverage
 
   // Options for build invocations.
   case BazelBuildOptionsDebug,
@@ -337,6 +343,7 @@ public class TulsiOptionSet: Equatable {
     addBoolOption(.TreeArtifactOutputs, .Generic, true)
     addBoolOption(.Use64BitWatchSimulator, .Generic, false)
     addBoolOption(.DisableCustomLLDBInit, .Generic, false)
+    addBoolOption(.HTMLCodeCoverage, .Generic, false)
 
     let defaultIdentifier = PlatformConfiguration.defaultConfiguration.identifier
     let platformCPUIdentifiers = PlatformConfiguration.allValidConfigurations.map { $0.identifier }
@@ -347,6 +354,8 @@ public class TulsiOptionSet: Equatable {
 
     addStringOption(.CommandlineArguments, [.TargetSpecializable, .SupportsInheritKeyword])
     addStringOption(.EnvironmentVariables, [.TargetSpecializable, .SupportsInheritKeyword])
+    
+    addStringOption(.CodeCoverageFilterRegex, [.TargetSpecializable, .SupportsInheritKeyword])
 
     // List matches the available options for the 'C++ Language Dialect' setting in XCode 10.2.1 and 11.
     // Currently compiler default is equivalent to GNU++98 (Xcode 10.2.1 and 11)
