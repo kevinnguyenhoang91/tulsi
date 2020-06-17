@@ -41,6 +41,8 @@
 "CommandlineArguments" = "Commandline arguments";
 "EnvironmentVariables" = "Environment variables";
 
+"CodeCoverageFilterRegex" = "Filter source files in HTML code coverage report";
+
 "PreActionScriptOptions" = "PreActionScripts";
 "PostActionScriptOptions" = "PostActionScripts";
 "BuildActionPreActionScript" = "Build";
@@ -57,6 +59,7 @@
 
 "SwiftForcesdSYMs" = "Swift code dependency enables dSYMs (optional for debugging after 10.2.1)";
 "TreeArtifactOutputs" = "Enable tree artifact outputs (--define=apple.experimental.tree_artifact_outputs=1). Disable if you're having issues.";
+"HTMLCodeCoverage" = "Export HTML code coverage report for Test targets";
 
 "SuppressSwiftUpdateCheck" = "Suppress Xcode Swift update check";
 "SuppressSwiftUpdateCheck_DESC" = "Suppresses Xcode's update notification for projects containing Swift code. This asserts that the Swift code is at least version 2.1.";

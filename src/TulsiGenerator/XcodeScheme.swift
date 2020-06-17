@@ -60,6 +60,7 @@ final class XcodeScheme {
   let preActionScripts: [XcodeActionType: String]
   let postActionScripts: [XcodeActionType: String]
   let localizedMessageLogger: LocalizedMessageLogger
+  let codeCoverageEnabled: Bool
 
   init(target: PBXTarget?,
        project: PBXProject,
@@ -80,7 +81,8 @@ final class XcodeScheme {
        environmentVariables: [String: String] = [:],
        preActionScripts: [XcodeActionType: String],
        postActionScripts: [XcodeActionType: String],
-       localizedMessageLogger: LocalizedMessageLogger) {
+       localizedMessageLogger: LocalizedMessageLogger,
+       codeCoverageEnabled: Bool = false) {
     self.version = version
     self.project = project
     self.projectBundleName = projectBundleName
@@ -104,6 +106,8 @@ final class XcodeScheme {
 
     self.localizedMessageLogger = localizedMessageLogger
 
+    self.codeCoverageEnabled = codeCoverageEnabled
+    
     if let target = target {
       self.target = target
       primaryTargetBuildableReference = BuildableReference(target: target,
@@ -192,6 +196,7 @@ final class XcodeScheme {
       "selectedDebuggerIdentifier": "Xcode.DebuggerFoundation.Debugger.LLDB",
       "selectedLauncherIdentifier": "Xcode.DebuggerFoundation.Launcher.LLDB",
       "shouldUseLaunchSchemeArgsEnv": "YES",
+      "codeCoverageEnabled": codeCoverageEnabled ? "YES" : "NO",
     ]
     element.setAttributesWith(testActionAttributes)
 
