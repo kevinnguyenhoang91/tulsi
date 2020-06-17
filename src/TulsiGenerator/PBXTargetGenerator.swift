@@ -749,16 +749,16 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
                                                         buildArguments: buildArgs,
                                                         buildWorkingDirectory: workingDirectory)
 
-    // for target: PBXTarget in project.allTargets {
-    //   if target === bazelCleanScriptTarget {
-    //     continue
-    //   }
+    for target: PBXTarget in project.allTargets {
+      if target === bazelCleanScriptTarget {
+        continue
+      }
 
-    //   target.createDependencyOn(bazelCleanScriptTarget!,
-    //                             proxyType: PBXContainerItemProxy.ProxyType.targetReference,
-    //                             inProject: project,
-    //                             first: true)
-    // }
+      target.createDependencyOn(bazelCleanScriptTarget!,
+                                proxyType: PBXContainerItemProxy.ProxyType.targetReference,
+                                inProject: project,
+                                first: true)
+    }
   }
   
   func generateSwiftLintTarget(_ scriptPath: String, workingDirectory: String = "",
@@ -774,16 +774,16 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
                                                         buildArguments: buildArgs,
                                                         buildWorkingDirectory: workingDirectory)
 
-    // for target: PBXTarget in project.allTargets {
-    //   if target === bazelCleanScriptTarget {
-    //     continue
-    //   }
+    for target: PBXTarget in project.allTargets {
+      if target === bazelCleanScriptTarget {
+        continue
+      }
 
-    //   target.createDependencyOn(bazelCleanScriptTarget!,
-    //                             proxyType: PBXContainerItemProxy.ProxyType.targetReference,
-    //                             inProject: project,
-    //                             first: true)
-    // }
+      target.createDependencyOn(bazelCleanScriptTarget!,
+                                proxyType: PBXContainerItemProxy.ProxyType.targetReference,
+                                inProject: project,
+                                first: true)
+    }
   }
 
   func generateTopLevelBuildConfigurations(_ buildSettingOverrides: [String: String] = [:]) {
