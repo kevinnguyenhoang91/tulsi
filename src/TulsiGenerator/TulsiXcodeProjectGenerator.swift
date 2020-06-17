@@ -50,6 +50,7 @@ public final class TulsiXcodeProjectGenerator {
         buildScript: bundle.url(forResource: "bazel_build", withExtension: "py")!,
         cleanScript: bundle.url(forResource: "bazel_clean", withExtension: "sh")!,
         swiftlintScript: bundle.url(forResource: "swiftlint", withExtension: "sh")!,
+        codeCoverageReportScript: bundle.url(forResource: "code_coverage_report", withExtension: "sh")!,
         extraBuildScripts: [bundle.url(forResource: "tulsi_logging", withExtension: "py")!,
                             bundle.url(forResource: "bazel_options", withExtension: "py")!,
                             bundle.url(forResource: "apfs_clone_copy", withExtension: "py")!,

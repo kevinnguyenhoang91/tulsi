@@ -51,6 +51,7 @@
 "EnvironmentVariables" = "Environment variables";
 
 "CodeCoverageFilterRegex" = "Filter source files in HTML code coverage report";
+"CodeCoverageIgnoreFilterRegex" = "Ignore filter source files in HTML code coverage report";
 
 "PreActionScriptOptions" = "PreActionScripts";
 "PostActionScriptOptions" = "PostActionScripts";
