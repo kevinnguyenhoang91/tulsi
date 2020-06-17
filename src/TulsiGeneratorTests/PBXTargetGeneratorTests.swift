@@ -190,6 +190,23 @@ class PBXTargetGeneratorTestsWithFiles: XCTestCase {
     let expectedScriptArguments = "\"\(bazelPath)\" \"bazel-bin\""
     XCTAssertEqual(target.buildArgumentsString, expectedScriptArguments)
   }
+  
+  func testGenerateSwiftLintTarget() {
+    let scriptPath = "scriptPath"
+    let workingDirectory = "/directory/of/work"
+    targetGenerator.generateSwiftLintTarget(scriptPath, workingDirectory: workingDirectory)
+    let targets = project.targetByName
+    XCTAssertEqual(targets.count, 1)
+
+    XCTAssertNotNil(targets[PBXTargetGenerator.SwiftLintTarget] as? PBXLegacyTarget)
+    let target = targets[PBXTargetGenerator.SwiftLintTarget] as! PBXLegacyTarget
+
+    XCTAssertEqual(target.buildToolPath, scriptPath)
+
+    // The script should launch the test scriptPath with bazelPath's path as the only argument.
+    let expectedScriptArguments = "\"\(bazelPath)\" \"bazel-bin\""
+    XCTAssertEqual(target.buildArgumentsString, expectedScriptArguments)
+  }
 
   func testGenerateBazelCleanTargetAppliesToRulesAddedBeforeAndAfter() {
     do {
