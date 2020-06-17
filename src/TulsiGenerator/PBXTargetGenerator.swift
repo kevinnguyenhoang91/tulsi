@@ -98,6 +98,10 @@ protocol PBXTargetGeneratorProtocol: class {
   /// variable.
   func generateBazelCleanTarget(_ scriptPath: String, workingDirectory: String,
                                 startupOptions: [String])
+                                
+  /// Generates a legacy target that invokes SwiftLint on demand
+  func generateSwiftLintTarget(_ scriptPath: String, workingDirectory: String,
+                               startupOptions: [String])
 
   /// Generates project-level build configurations.
   func generateTopLevelBuildConfigurations(_ buildSettingOverrides: [String: String])
@@ -165,6 +169,9 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
   /// Name of the legacy target that will be used to communicate with Bazel during Xcode clean
   /// actions.
   static let BazelCleanTarget = "_bazel_clean_"
+  
+    /// Name of the legacy target that will be used to run SwiftLint
+  static let SwiftLintTarget = "_swiftlint_"
 
   /// Xcode variable name used to refer to the workspace root.
   static let WorkspaceRootVarName = "TULSI_WR"
@@ -203,6 +210,8 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
   let redactWorkspaceSymlink: Bool
 
   var bazelCleanScriptTarget: PBXLegacyTarget? = nil
+  
+  var bazelSwiftLintTarget: PBXLegacyTarget? = nil
 
   /// Stores data about a given RuleEntry to be used in order to generate Xcode indexer targets.
   private struct IndexerData {
@@ -733,16 +742,41 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
                                                         buildArguments: buildArgs,
                                                         buildWorkingDirectory: workingDirectory)
 
-    for target: PBXTarget in project.allTargets {
-      if target === bazelCleanScriptTarget {
-        continue
-      }
+    // for target: PBXTarget in project.allTargets {
+    //   if target === bazelCleanScriptTarget {
+    //     continue
+    //   }
 
-      target.createDependencyOn(bazelCleanScriptTarget!,
-                                proxyType: PBXContainerItemProxy.ProxyType.targetReference,
-                                inProject: project,
-                                first: true)
-    }
+    //   target.createDependencyOn(bazelCleanScriptTarget!,
+    //                             proxyType: PBXContainerItemProxy.ProxyType.targetReference,
+    //                             inProject: project,
+    //                             first: true)
+    // }
+  }
+  
+  func generateSwiftLintTarget(_ scriptPath: String, workingDirectory: String = "",
+                               startupOptions: [String] = []) {
+    assert(bazelSwiftLintTarget == nil, "generateSwiftLintTarget may only be called once")
+
+    let allArgs = [bazelPath, bazelBinPath] + startupOptions
+    let buildArgs = allArgs.map { "\"\($0)\""}.joined(separator: " ")
+
+    bazelSwiftLintTarget = project.createLegacyTarget(PBXTargetGenerator.SwiftLintTarget,
+                                                        deploymentTarget: nil,
+                                                        buildToolPath: "\(scriptPath)",
+                                                        buildArguments: buildArgs,
+                                                        buildWorkingDirectory: workingDirectory)
+
+    // for target: PBXTarget in project.allTargets {
+    //   if target === bazelCleanScriptTarget {
+    //     continue
+    //   }
+
+    //   target.createDependencyOn(bazelCleanScriptTarget!,
+    //                             proxyType: PBXContainerItemProxy.ProxyType.targetReference,
+    //                             inProject: project,
+    //                             first: true)
+    // }
   }
 
   func generateTopLevelBuildConfigurations(_ buildSettingOverrides: [String: String] = [:]) {
