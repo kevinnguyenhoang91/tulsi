@@ -96,6 +96,6 @@ final class BazelXcodeProjectPatcher {
   // Handles patching any groups that were generated under Bazel's magical "external" container to
   // proper filesystem references. This should be called after patchBazelRelativeReferences.
   func patchExternalRepositoryReferences(_ xcodeProject: PBXProject, _ bazelExecRoot: String) {
-    fileReferencePatcher.patchExternalRepositoryReferencesAlternative(xcodeProject, bazelExecRoot)
+    fileReferencePatcher.patchExternalRepositoryReferencesVersioning(xcodeProject, bazelExecRoot)
   }
 }
