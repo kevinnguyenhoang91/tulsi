@@ -49,6 +49,9 @@ public enum TulsiOptionKey: String {
       
       // Code coverage report filter regex.
       CodeCoverageFilterRegex,
+      
+      // Code coverage report ignore filter regex.
+      CodeCoverageIgnoreFilterRegex,
 
       // Option to enable compilation after error.
       BazelContinueBuildingAfterError,
@@ -341,6 +344,7 @@ public class TulsiOptionSet: Equatable {
     addStringOption(.EnvironmentVariables, [.TargetSpecializable, .SupportsInheritKeyword])
     
     addStringOption(.CodeCoverageFilterRegex, [.TargetSpecializable, .SupportsInheritKeyword])
+    addStringOption(.CodeCoverageIgnoreFilterRegex, [.TargetSpecializable, .SupportsInheritKeyword])
 
     // List matches the available options for the 'C++ Language Dialect' setting in XCode 10.2.1 and 11.
     // Currently compiler default is equivalent to GNU++98 (Xcode 10.2.1 and 11)

@@ -148,6 +148,9 @@ public let GatheringIndexerSources = "gatheringIndexerSources"
 /// Sent when creating Xcode build targets.
 public let GeneratingBuildTargets = "generatingBuildTargets"
 
+/// Sent when creating Xcode code coverage targets.
+public let GeneratingCodeCoverageTargets = "generatingCodeCoverageTargets"
+
 /// Sent when creating Xcode indexer targets.
 public let GeneratingIndexerTargets = "generatingIndexerTargets"
 
