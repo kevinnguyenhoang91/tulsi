@@ -36,6 +36,7 @@ final class XcodeProjectGenerator {
   struct ResourceSourcePathURLs {
     let buildScript: URL  // The script to run on "build" actions.
     let cleanScript: URL  // The script to run on "clean" actions.
+    let swiftlintScript: URL  // The script to run on swiftlint actions.
     let extraBuildScripts: [URL] // Any additional scripts to install into the project bundle.
     let iOSUIRunnerEntitlements: URL  // Entitlements file template for iOS UI Test runner apps.
     let macOSUIRunnerEntitlements: URL  // Entitlements file template for macOS UI Test runner apps.
@@ -69,6 +70,7 @@ final class XcodeProjectGenerator {
   private static let BuildScript = "bazel_build.py"
   private static let SettingsScript = "bazel_build_settings.py"
   private static let CleanScript = "bazel_clean.sh"
+  private static let SwiftLintScript = "swiftlint.sh"
   private static let ShellCommandsUtil = "bazel_cache_reader"
   private static let ShellCommandsCleanScript = "clean_symbol_cache"
   private static let LLDBInitBootstrapScript = "bootstrap_lldbinit"
@@ -424,6 +426,7 @@ final class XcodeProjectGenerator {
 
     let buildScriptPath = "${PROJECT_FILE_PATH}/\(XcodeProjectGenerator.ScriptDirectorySubpath)/\(XcodeProjectGenerator.BuildScript)"
     let cleanScriptPath = "${PROJECT_FILE_PATH}/\(XcodeProjectGenerator.ScriptDirectorySubpath)/\(XcodeProjectGenerator.CleanScript)"
+    let swiftlintScriptPath = "${PROJECT_FILE_PATH}/\(XcodeProjectGenerator.ScriptDirectorySubpath)/\(XcodeProjectGenerator.SwiftLintScript)"
 
     let generator = pbxTargetGeneratorType.init(bazelPath: config.bazelURL.path,
                                                 bazelBinPath: workspaceInfoExtractor.bazelBinPath,
@@ -547,6 +550,12 @@ final class XcodeProjectGenerator {
       let startupOptions = bazelSettingsProvider.universalFlags.startup
       generator.generateBazelCleanTarget(cleanScriptPath, workingDirectory: workingDirectory,
                                          startupOptions: startupOptions)
+    }
+    profileAction("generating_swiftlint_target") {
+      let bazelSettingsProvider = workspaceInfoExtractor.bazelSettingsProvider
+      let startupOptions = bazelSettingsProvider.universalFlags.startup
+      generator.generateSwiftLintTarget(swiftlintScriptPath, workingDirectory: workingDirectory,
+                                        startupOptions: startupOptions)
     }
     profileAction("generating_top_level_build_configs") {
       var buildSettings = [String: String]()
@@ -1311,6 +1320,7 @@ final class XcodeProjectGenerator {
       localizedMessageLogger.infoMessage("Installing scripts")
       installFiles([(resourceURLs.buildScript, XcodeProjectGenerator.BuildScript),
                     (resourceURLs.cleanScript, XcodeProjectGenerator.CleanScript),
+                    (resourceURLs.swiftlintScript, XcodeProjectGenerator.SwiftLintScript),
                    ],
                    toDirectory: scriptDirectoryURL)
       installFiles(resourceURLs.extraBuildScripts.map { ($0, $0.lastPathComponent) },
