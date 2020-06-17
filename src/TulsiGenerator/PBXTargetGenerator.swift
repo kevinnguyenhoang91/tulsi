@@ -975,6 +975,8 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
   func generateCodeCoverageTargetsForRuleEntries(_ ruleEntries: Set<RuleEntry>,
                                                  codeCoverageReportScriptPath: String,
                                                  workingDirectory: String) throws {
+    guard enabledFeatures().contains(.HTMLCodeCoverage) else { return }
+    
     let namedRuleEntries = generateUniqueNamesForRuleEntries(ruleEntries)
 
     let progressNotifier = ProgressNotifier(name: GeneratingCodeCoverageTargets,
@@ -990,13 +992,13 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
         var coverageFilterRegex = ""
         if let regexVar = coverageRegexes[targetName] {
           coverageFilterRegex = regexVar
+          let coverageIgnoreRegex = codeCoverageIgnoreFilterRegexes(for: entry)
+          let startupOptions = [coverageFilterRegex, coverageIgnoreRegex, targetName]
+          generateCodeCoverageReportTarget(name,
+                                          codeCoverageReportScriptPath, 
+                                          workingDirectory: workingDirectory,
+                                          startupOptions: startupOptions)
         }
-        let coverageIgnoreRegex = codeCoverageIgnoreFilterRegexes(for: entry)
-        let startupOptions = [coverageFilterRegex, coverageIgnoreRegex, targetName]
-        generateCodeCoverageReportTarget(name,
-                                         codeCoverageReportScriptPath, 
-                                         workingDirectory: workingDirectory,
-                                         startupOptions: startupOptions)
       }
     }
   }
@@ -1413,11 +1415,6 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
                                                      withPerFileSettings: nonARCSettings)
       target.buildPhases.append(buildPhase)
     }
-    
-    // if enabledFeatures().contains(.HTMLCodeCoverage) {
-    //   let testBuildPhase = createGenerateHTMLCodeCoverageTestBuildPhase(ruleEntry)
-    //   target.buildPhases.append(testBuildPhase)
-    // }
   }
 
   /// Adds includes paths from the RuleEntry to the given NSSet.
