@@ -891,8 +891,66 @@ final class XcodeProjectGenerator {
       var postActionScripts: [XcodeActionType: String] = [:]
       postActionScripts[.BuildAction] = config.options[.BuildActionPostActionScript, ruleEntry.label.value] ?? nil
       postActionScripts[.LaunchAction] = config.options[.LaunchActionPostActionScript, ruleEntry.label.value] ?? nil
-      postActionScripts[.TestAction] = config.options[.TestActionPostActionScript, ruleEntry.label.value] ?? nil
+      
+      if BazelBuildSettingsFeatures.enabledFeatures(options: config.options).contains(.HTMLCodeCoverage) {
+        postActionScripts[.TestAction] = createGenerateHTMLCodeCoverageTestBuildPhase(ruleEntry) + (config.options[.TestActionPostActionScript, ruleEntry.label.value] ?? "")
+      } else {
+        postActionScripts[.TestAction] = config.options[.TestActionPostActionScript, ruleEntry.label.value] ?? nil
+      }
+      
       return postActionScripts
+    }
+    
+    func codeCoverageFilterRegexes(for ruleEntry: RuleEntry) -> [String: String] {
+      var codeCoverageFilterRegexes: [String: String] = [:]
+      config.options[.CodeCoverageFilterRegex, ruleEntry.label.value]?.components(separatedBy: ",").forEach() { keyValueString in
+        let components = keyValueString.components(separatedBy: "=")
+        let key = components.first ?? ""
+        if !key.isEmpty {
+          let value = components[1..<components.count].joined(separator: "=")
+          codeCoverageFilterRegexes[key] = value
+        }
+      }
+      return codeCoverageFilterRegexes
+    }
+    
+    func createGenerateHTMLCodeCoverageTestBuildPhase(_ entry: RuleEntry) -> String {
+      let bazelRootURL = URL(fileURLWithPath: "\(workspaceRootURL.resolvingSymlinksInPath().path)/bazel-out/../../", isDirectory: false)
+      let bazelRootPath = "/private\(bazelRootURL.resolvingSymlinksInPath().path)"
+      var targetName = entry.label.targetName ?? ""
+      
+      let coverageRegexes = codeCoverageFilterRegexes(for: entry)
+      var coverageFilterRegex = ""
+      if let regexVar = coverageRegexes[targetName] {
+        coverageFilterRegex = regexVar
+      }
+      
+      let shellScript =
+          "mkdir -p \"$BUILT_PRODUCTS_DIR/html_coverage\" \\n" +
+          "find \"$CLANG_PROFILE_DATA_DIRECTORY\" -type f -name \"Coverage.profdata\" -exec cp -RLf {} \"$BUILT_PRODUCTS_DIR/html_coverage/\" \\; \\n" +
+          "if [ ! -f \"$BUILT_PRODUCTS_DIR/html_coverage/Coverage.profdata\" ]; then \\n" +
+          "    exit 0 \\n" + 
+          "fi \\n" +
+          "COVERAGE_FILTER_REGEX=\"\(coverageFilterRegex)\" \\n" +
+          "NAME_REGEX=\".*\(targetName).*\" \\n" +
+          "if [[ \"${COVERAGE_FILTER_REGEX}\" != \"\" ]]; then \\n" + 
+          "    NAME_REGEX=\"$COVERAGE_FILTER_REGEX\" \\n" +
+          "else \\n" +
+          "    echo \"warning: Ignore generating HTML code coverage report because filter regex is empty.\" \\n" +
+          "    exit 0 \\n" + 
+          "fi \\n" +
+          "xcrun llvm-cov show " +
+          "-format=html " +
+          "-instr-profile \"$BUILT_PRODUCTS_DIR/html_coverage/Coverage.profdata\" " +
+          "\"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\" " +
+          "-output-dir=\"$BUILT_PRODUCTS_DIR/html_coverage/report\" " +
+          "-ignore-filename-regex=\".*bazel-out.*|.*Tests.*\" " +
+          "-name-regex=\"$NAME_REGEX\" " +
+          "-path-equivalence=\(bazelRootPath)/vinone_ios/,\(bazelRootPath)/vinone_ios_workspace \\n" +
+          "sed -i '' \"s/<h2>Coverage Report<\\/h2>/<h2>Coverage Report ($TARGETNAME)<\\/h2>/g\" \"$BUILT_PRODUCTS_DIR/html_coverage/report/index.html\" \\n" +
+          "open $BUILT_PRODUCTS_DIR/html_coverage/report/index.html"
+
+      return shellScript
     }
 
     // Build a map of extension targets to hosts so the hosts may be referenced as additional build

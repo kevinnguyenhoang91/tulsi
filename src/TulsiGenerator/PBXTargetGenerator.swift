@@ -1357,10 +1357,10 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
       target.buildPhases.append(buildPhase)
     }
     
-    if enabledFeatures().contains(.HTMLCodeCoverage) {
-      let testBuildPhase = createGenerateHTMLCodeCoverageTestBuildPhase(ruleEntry)
-      target.buildPhases.append(testBuildPhase)
-    }
+    // if enabledFeatures().contains(.HTMLCodeCoverage) {
+    //   let testBuildPhase = createGenerateHTMLCodeCoverageTestBuildPhase(ruleEntry)
+    //   target.buildPhases.append(testBuildPhase)
+    // }
   }
 
   /// Adds includes paths from the RuleEntry to the given NSSet.
@@ -1778,63 +1778,63 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
     return environmentVariables
   }
   
-  func codeCoverageFilterRegexes(for ruleEntry: RuleEntry) -> [String: String] {
-    var codeCoverageFilterRegexes: [String: String] = [:]
-    options[.CodeCoverageFilterRegex, ruleEntry.label.value]?.components(separatedBy: ",").forEach() { keyValueString in
-      let components = keyValueString.components(separatedBy: "=")
-      let key = components.first ?? ""
-      if !key.isEmpty {
-        let value = components[1..<components.count].joined(separator: "=")
-        codeCoverageFilterRegexes[key] = value
-      }
-    }
-    return codeCoverageFilterRegexes
-  }
+  // func codeCoverageFilterRegexes(for ruleEntry: RuleEntry) -> [String: String] {
+  //   var codeCoverageFilterRegexes: [String: String] = [:]
+  //   options[.CodeCoverageFilterRegex, ruleEntry.label.value]?.components(separatedBy: ",").forEach() { keyValueString in
+  //     let components = keyValueString.components(separatedBy: "=")
+  //     let key = components.first ?? ""
+  //     if !key.isEmpty {
+  //       let value = components[1..<components.count].joined(separator: "=")
+  //       codeCoverageFilterRegexes[key] = value
+  //     }
+  //   }
+  //   return codeCoverageFilterRegexes
+  // }
 
-  private func createGenerateHTMLCodeCoverageTestBuildPhase(_ entry: RuleEntry) -> PBXShellScriptBuildPhase {
-    let bazelRootURL = URL(fileURLWithPath: "\(workspaceRootURL.resolvingSymlinksInPath().path)/bazel-out/../../", isDirectory: false)
-    let bazelRootPath = "/private\(bazelRootURL.resolvingSymlinksInPath().path)"
-    var targetName = entry.label.targetName ?? ""
+  // private func createGenerateHTMLCodeCoverageTestBuildPhase(_ entry: RuleEntry) -> PBXShellScriptBuildPhase {
+  //   let bazelRootURL = URL(fileURLWithPath: "\(workspaceRootURL.resolvingSymlinksInPath().path)/bazel-out/../../", isDirectory: false)
+  //   let bazelRootPath = "/private\(bazelRootURL.resolvingSymlinksInPath().path)"
+  //   var targetName = entry.label.targetName ?? ""
     
-    let coverageRegexes = codeCoverageFilterRegexes(for: entry)
-    var coverageFilterRegex = ""
-    if let regexVar = coverageRegexes[targetName] {
-      coverageFilterRegex = regexVar
-    }
+  //   let coverageRegexes = codeCoverageFilterRegexes(for: entry)
+  //   var coverageFilterRegex = ""
+  //   if let regexVar = coverageRegexes[targetName] {
+  //     coverageFilterRegex = regexVar
+  //   }
     
-    let shellScript =
-        "# Script to generate HTML code coverage for Test targets.\n" +
-        "set -eu\n" +
-        "mkdir -p \"$BUILT_PRODUCTS_DIR/html_coverage\"\n\n" +
-        "find \"$CLANG_PROFILE_DATA_DIRECTORY\" -type f -name \"Coverage.profdata\" -exec cp -RLf {} \"$BUILT_PRODUCTS_DIR/html_coverage/\" \\;\n\n" +
-        "if [ ! -f \"$BUILT_PRODUCTS_DIR/html_coverage/Coverage.profdata\" ]; then\n" +
-        "    exit 0\n" +
-        "fi\n\n" +
-        "COVERAGE_FILTER_REGEX=\"\(coverageFilterRegex)\"\n" +
-        "NAME_REGEX=\".*\(targetName).*\"\n" +
-        "if [[ \"${COVERAGE_FILTER_REGEX}\" != \"\" ]]; then\n" +
-        "    NAME_REGEX=\"$COVERAGE_FILTER_REGEX\"\n" +
-        "else\n" +
-        "    echo \"warning: Ignore generating HTML code coverage report because filter regex is empty.\"\n" +
-        "    exit 0\n" +
-        "fi\n" +
-        "xcrun llvm-cov show \\\n" +
-        "    -format=html \\\n" +
-        "    -instr-profile \"$BUILT_PRODUCTS_DIR/html_coverage/Coverage.profdata\" \\\n" +
-        "    \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\" \\\n" +
-        "    -output-dir=\"$BUILT_PRODUCTS_DIR/html_coverage/report\" \\\n" +
-        "    -ignore-filename-regex=\".*bazel-out.*|.*Tests.*\" \\\n" +
-        "    -name-regex=\"$NAME_REGEX\" \\\n" +
-        "    -path-equivalence=\(bazelRootPath)/vinone_ios/,\(bazelRootPath)/vinone_ios_workspace\n\n" +
-        "sed -i '' \"s/<h2>Coverage Report<\\/h2>/<h2>Coverage Report ($TARGETNAME)<\\/h2>/g\" \"$BUILT_PRODUCTS_DIR/html_coverage/report/index.html\"\n" +
-        "open $BUILT_PRODUCTS_DIR/html_coverage/report/index.html"
+  //   let shellScript =
+  //       "# Script to generate HTML code coverage for Test targets.\n" +
+  //       "set -eu\n" +
+  //       "mkdir -p \"$BUILT_PRODUCTS_DIR/html_coverage\"\n\n" +
+  //       "find \"$CLANG_PROFILE_DATA_DIRECTORY\" -type f -name \"Coverage.profdata\" -exec cp -RLf {} \"$BUILT_PRODUCTS_DIR/html_coverage/\" \\;\n\n" +
+  //       "if [ ! -f \"$BUILT_PRODUCTS_DIR/html_coverage/Coverage.profdata\" ]; then\n" +
+  //       "    exit 0\n" +
+  //       "fi\n\n" +
+  //       "COVERAGE_FILTER_REGEX=\"\(coverageFilterRegex)\"\n" +
+  //       "NAME_REGEX=\".*\(targetName).*\"\n" +
+  //       "if [[ \"${COVERAGE_FILTER_REGEX}\" != \"\" ]]; then\n" +
+  //       "    NAME_REGEX=\"$COVERAGE_FILTER_REGEX\"\n" +
+  //       "else\n" +
+  //       "    echo \"warning: Ignore generating HTML code coverage report because filter regex is empty.\"\n" +
+  //       "    exit 0\n" +
+  //       "fi\n" +
+  //       "xcrun llvm-cov show \\\n" +
+  //       "    -format=html \\\n" +
+  //       "    -instr-profile \"$BUILT_PRODUCTS_DIR/html_coverage/Coverage.profdata\" \\\n" +
+  //       "    \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\" \\\n" +
+  //       "    -output-dir=\"$BUILT_PRODUCTS_DIR/html_coverage/report\" \\\n" +
+  //       "    -ignore-filename-regex=\".*bazel-out.*|.*Tests.*\" \\\n" +
+  //       "    -name-regex=\"$NAME_REGEX\" \\\n" +
+  //       "    -path-equivalence=\(bazelRootPath)/vinone_ios/,\(bazelRootPath)/vinone_ios_workspace\n\n" +
+  //       "sed -i '' \"s/<h2>Coverage Report<\\/h2>/<h2>Coverage Report ($TARGETNAME)<\\/h2>/g\" \"$BUILT_PRODUCTS_DIR/html_coverage/report/index.html\"\n" +
+  //       "open $BUILT_PRODUCTS_DIR/html_coverage/report/index.html"
 
-    let buildPhase = PBXShellScriptBuildPhase(shellScript: shellScript, shellPath: "/bin/bash")
+  //   let buildPhase = PBXShellScriptBuildPhase(shellScript: shellScript, shellPath: "/bin/bash")
     
-    buildPhase.showEnvVarsInLog = true
-    buildPhase.mnemonic = "HTMLCodeCoverage"
-    return buildPhase
-  }
+  //   buildPhase.showEnvVarsInLog = true
+  //   buildPhase.mnemonic = "HTMLCodeCoverage"
+  //   return buildPhase
+  // }
 
   private func createGenerateDummyDependencyFilesTestBuildPhase(_ sources: [BazelFileInfo]) -> PBXShellScriptBuildPhase {
     let files = sources.map { ($0.subPath as NSString).deletingPathExtension.pbPathLastComponent }
