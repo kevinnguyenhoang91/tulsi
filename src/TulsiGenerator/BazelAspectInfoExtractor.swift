@@ -214,6 +214,7 @@ final class BazelAspectInfoExtractor: QueuedLogging {
         "--noshow_loading_progress",  // Don't show Bazel's loading progress.
         "--noshow_progress",  // Don't show Bazel's build progress.
         "--symlink_prefix=/",  // Generate artifacts without overwriting the normal build symlinks.
+        "--swiftcopt=-suppress-warnings",  // Generate artifacts without overwriting the normal build symlinks.
     ])
     arguments.append(contentsOf: buildOptions)
     arguments.append(contentsOf: config.bazelFlags)
