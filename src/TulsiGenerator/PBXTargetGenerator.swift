@@ -116,7 +116,7 @@ protocol PBXTargetGeneratorProtocol: class {
   /// Returns a mapping from build label to generated PBXNativeTarget.
   /// Throws if one of the RuleEntry instances is for an unsupported Bazel target type.
   func generateBuildTargetsForRuleEntries(_ entries: Set<RuleEntry>,
-                                          ruleEntryMap: RuleEntryMap) throws
+                                          ruleEntryMap: RuleEntryMap) throws -> [BuildLabel: PBXNativeTarget]
    
   /// Generates Xcode coverage targets that invoke Bazel for the given targets. For test-type rules,
   /// non-compiling source file linkages are created to facilitate indexing of XCTests.
