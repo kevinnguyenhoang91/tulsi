@@ -748,6 +748,8 @@ class BazelBuildBridge(object):
             output_line = '%s/%s' % (tulsi_workspace, output_line)
           else:
             output_line = '%s/%s' % (self.workspace_root, output_line)
+        if output_line.startswith("warning:") and output_line.endswith(".pcm: No such file or directory"):
+            output_line = output_line.replace("No such file or directory", "Module cache not found. Please ignore this warning.")
         return output_line
       patch_xcode_parsable_line = PatchOutputLine
     else:
