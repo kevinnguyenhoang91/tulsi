@@ -57,16 +57,16 @@ final class BazelPBXReferencePatcher {
     mainGroup.removeChild(externalGroup)
   }
 
-  func patchExternalRepositoryReferencesAlternative(_ xcodeProject: PBXProject) {
+  func patchExternalRepositoryReferencesAlternative(_ xcodeProject: PBXProject, _ bazelExecRoot: String) {
     let mainGroup = xcodeProject.mainGroup
     
     guard let externalGroup = mainGroup.childGroupsByName["external"] else { return }
     mainGroup.removeChild(externalGroup)
     
-    let externalGroupResolvedPath = resolvePathFromBazelExecRoot("external")
+    let externalGroupResolvedPath = "\(bazelExecRoot)/../../external"
     let newExternalGroup = mainGroup.getOrCreateChildGroupByName("external",
                                                                   path: externalGroupResolvedPath,
-                                                                  sourceTree: .Group)
+                                                                  sourceTree: .Absolute)
 
     // The external directory may contain files such as a WORKSPACE file, but we only patch folders
     let childGroups = externalGroup.children.filter { $0 is PBXGroup } as! [PBXGroup]
