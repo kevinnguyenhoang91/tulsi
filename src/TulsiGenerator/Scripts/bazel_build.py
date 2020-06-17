@@ -1136,6 +1136,7 @@ class BazelBuildBridge(object):
       subprocess.check_output(['rsync',
                                '-vcrlpgoD',
                                '--delete',
+                               '--chmod=ugo=rwX',
                                full_source_path,
                                output_path],
                               stderr=subprocess.STDOUT)
