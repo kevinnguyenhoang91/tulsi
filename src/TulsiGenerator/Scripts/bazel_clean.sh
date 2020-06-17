@@ -25,9 +25,9 @@ readonly bazel_executable="$1"; shift
 readonly bazel_bin_dir="$1"; shift
 
 if [ -z $# ]; then
-  readonly arguments=(clean "--expunge")
+  readonly arguments=(clean)
 else
-  readonly arguments=("$@" clean "--expunge")
+  readonly arguments=("$@" clean)
 fi
 
 if [[ "${ACTION}" != "clean" ]]; then
