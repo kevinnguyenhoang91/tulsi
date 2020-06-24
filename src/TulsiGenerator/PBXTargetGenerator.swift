@@ -1674,10 +1674,11 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
     } else {
       normalizedTargetName = targetName
     }
-    if let suffix = suffix {
-      return String(format: "\(IndexerTargetPrefix)\(normalizedTargetName)_%08X_%@", hash, suffix)
-    }
-    return String(format: "\(IndexerTargetPrefix)\(normalizedTargetName)_%08X", hash)
+    // if let suffix = suffix {
+    //   return String(format: "\(IndexerTargetPrefix)\(normalizedTargetName)_%08X_%@", hash, suffix)
+    // }
+    // return String(format: "\(IndexerTargetPrefix)\(normalizedTargetName)_%08X", hash)
+    return String(format: "\(normalizedTargetName)")
   }
 
   // Creates a PBXSourcesBuildPhase with the given references, optionally applying the given
