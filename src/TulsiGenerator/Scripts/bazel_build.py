@@ -1522,9 +1522,9 @@ class BazelBuildBridge(object):
       if clear_source_map:
         out.write('settings clear target.source-map\n')
         return 0
-
+      source_maps_lldb = []
       if self.normalized_prefix_map:
-        source_map = ('./', workspace_root)
+        source_maps_lldb.append(('./', self._NormalizePath(self.workspace_root)))
         out.write('# This maps the normalized root to that used by '
                   '%r.\n' % project_basename)
       else:
@@ -1536,11 +1536,16 @@ class BazelBuildBridge(object):
         # If we had multiple remappings, it would not make sense for the
         # two APIs to share the same mappings. They have very different
         # side-effects in how they individually handle debug information.
-        source_map = self._ExtractTargetSourceMap()
+        source_maps_lldb = [self._ExtractTargetSourceMap()]
         out.write('# This maps Bazel\'s execution root to that used by '
                   '%r.\n' % project_basename)
 
-      out.write('settings set target.source-map "%s" "%s"\n' % source_map)
+      out.write('settings set target.source-map')
+      for source_map in source_maps_lldb:
+        key, path = source_map
+        if os.path.exists(path):
+          out.write(' "%s" "%s"' % source_map)
+      out.write('\n')
 
     return 0
 
