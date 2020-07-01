@@ -357,6 +357,19 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
       let newBuildPhase = PBXSourcesBuildPhase()
       newBuildPhase.files = buildPhase.files + other.buildPhase.files
 
+      var seenPaths: [String] = []
+      var newList: [PBXBuildFile] = []
+      for file in newBuildPhase.files {
+        if let path = file.fileRef.path {
+          if !seenPaths.contains(path) {
+            newList.append(file)
+            seenPaths.append(path)
+          }
+        }
+      }
+      
+      newBuildPhase.files = newList
+
       return IndexerData(indexerNameInfo: newName,
                          dependencies: newDependencies,
                          resolvedDependencies: newResolvedDependencies,
