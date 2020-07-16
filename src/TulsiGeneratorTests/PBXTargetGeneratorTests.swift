@@ -207,6 +207,23 @@ class PBXTargetGeneratorTestsWithFiles: XCTestCase {
     let expectedScriptArguments = "\"\(bazelPath)\" \"bazel-bin\""
     XCTAssertEqual(target.buildArgumentsString, expectedScriptArguments)
   }
+  
+  func testGeneratePMD_CPDTarget() {
+    let scriptPath = "scriptPath"
+    let workingDirectory = "/directory/of/work"
+    targetGenerator.generatePMD_CPDTarget(scriptPath, workingDirectory: workingDirectory)
+    let targets = project.targetByName
+    XCTAssertEqual(targets.count, 1)
+
+    XCTAssertNotNil(targets[PBXTargetGenerator.PMD_CPDTarget] as? PBXLegacyTarget)
+    let target = targets[PBXTargetGenerator.PMD_CPDTarget] as! PBXLegacyTarget
+
+    XCTAssertEqual(target.buildToolPath, scriptPath)
+
+    // The script should launch the test scriptPath with bazelPath's path as the only argument.
+    let expectedScriptArguments = "\"\(bazelPath)\" \"bazel-bin\""
+    XCTAssertEqual(target.buildArgumentsString, expectedScriptArguments)
+  }
 
   func testGenerateBazelCleanTargetAppliesToRulesAddedBeforeAndAfter() {
     do {

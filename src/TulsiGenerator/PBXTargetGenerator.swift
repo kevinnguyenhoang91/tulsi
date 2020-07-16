@@ -102,6 +102,10 @@ protocol PBXTargetGeneratorProtocol: class {
   /// Generates a legacy target that invokes SwiftLint on demand
   func generateSwiftLintTarget(_ scriptPath: String, workingDirectory: String,
                                startupOptions: [String])
+
+  /// Generates a legacy target that invokes PMD_CPD on demand
+  func generatePMD_CPDTarget(_ scriptPath: String, workingDirectory: String,
+                               startupOptions: [String])
                                
   /// Generates a legacy target that invokes Code coverage report generating on demand
   func generateCodeCoverageReportTarget(_ name: String, _ scriptPath: String, workingDirectory: String,
@@ -182,7 +186,10 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
     /// Name of the legacy target that will be used to run SwiftLint
   static let SwiftLintTarget = "_swiftlint_"
   
-    /// Name of the legacy target that will be used to run SwiftLint
+    /// Name of the legacy target that will be used to run PMD_CPD
+  static let PMD_CPDTarget = "_copy_paste_detector_"
+  
+    /// Name of the legacy target that will be used to run Code Coverage
   static let CodeCoverageReportTarget = "_code_coverage_"
 
   /// Xcode variable name used to refer to the workspace root.
@@ -224,6 +231,8 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
   var bazelCleanScriptTarget: PBXLegacyTarget? = nil
   
   var bazelSwiftLintTarget: PBXLegacyTarget? = nil
+  
+  var bazelPMD_CPDTarget: PBXLegacyTarget? = nil
 
   /// Stores data about a given RuleEntry to be used in order to generate Xcode indexer targets.
   private struct IndexerData {
@@ -791,6 +800,20 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
     let buildArgs = allArgs.map { "\"\($0)\""}.joined(separator: " ")
 
     bazelSwiftLintTarget = project.createLegacyTarget(PBXTargetGenerator.SwiftLintTarget,
+                                                        deploymentTarget: nil,
+                                                        buildToolPath: "\(scriptPath)",
+                                                        buildArguments: buildArgs,
+                                                        buildWorkingDirectory: workingDirectory)
+  }
+  
+  func generatePMD_CPDTarget(_ scriptPath: String, workingDirectory: String = "",
+                               startupOptions: [String] = []) {
+    assert(bazelPMD_CPDTarget == nil, "generatePMD_CPDTarget may only be called once")
+
+    let allArgs = [bazelPath, bazelBinPath] + startupOptions
+    let buildArgs = allArgs.map { "\"\($0)\""}.joined(separator: " ")
+
+    bazelPMD_CPDTarget = project.createLegacyTarget(PBXTargetGenerator.PMD_CPDTarget,
                                                         deploymentTarget: nil,
                                                         buildToolPath: "\(scriptPath)",
                                                         buildArguments: buildArgs,
