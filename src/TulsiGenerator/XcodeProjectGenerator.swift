@@ -37,7 +37,8 @@ final class XcodeProjectGenerator {
     let buildScript: URL  // The script to run on "build" actions.
     let cleanScript: URL  // The script to run on "clean" actions.
     let swiftlintScript: URL  // The script to run on swiftlint actions.
-    let codeCoverageReportScript: URL  // The script to run on swiftlint actions.
+    let pMD_CPDScript: URL  // The script to run on cpd actions.
+    let codeCoverageReportScript: URL  // The script to run on code coverage actions.
     let extraBuildScripts: [URL] // Any additional scripts to install into the project bundle.
     let iOSUIRunnerEntitlements: URL  // Entitlements file template for iOS UI Test runner apps.
     let macOSUIRunnerEntitlements: URL  // Entitlements file template for macOS UI Test runner apps.
@@ -72,6 +73,7 @@ final class XcodeProjectGenerator {
   private static let SettingsScript = "bazel_build_settings.py"
   private static let CleanScript = "bazel_clean.sh"
   private static let SwiftLintScript = "swiftlint.sh"
+  private static let PMD_CPDScript = "cpd.sh"
   private static let CodeCoverageReportScript = "code_coverage_report.sh"
   private static let ShellCommandsUtil = "bazel_cache_reader"
   private static let ShellCommandsCleanScript = "clean_symbol_cache"
@@ -430,6 +432,7 @@ final class XcodeProjectGenerator {
     let buildScriptPath = "${PROJECT_FILE_PATH}/\(XcodeProjectGenerator.ScriptDirectorySubpath)/\(XcodeProjectGenerator.BuildScript)"
     let cleanScriptPath = "${PROJECT_FILE_PATH}/\(XcodeProjectGenerator.ScriptDirectorySubpath)/\(XcodeProjectGenerator.CleanScript)"
     let swiftlintScriptPath = "${PROJECT_FILE_PATH}/\(XcodeProjectGenerator.ScriptDirectorySubpath)/\(XcodeProjectGenerator.SwiftLintScript)"
+    let pMD_CPDScriptPath = "${PROJECT_FILE_PATH}/\(XcodeProjectGenerator.ScriptDirectorySubpath)/\(XcodeProjectGenerator.PMD_CPDScript)"
     let codeCoverageReportScriptPath = "${PROJECT_FILE_PATH}/\(XcodeProjectGenerator.ScriptDirectorySubpath)/\(XcodeProjectGenerator.CodeCoverageReportScript)"
     
     let generator = pbxTargetGeneratorType.init(bazelPath: config.bazelURL.path,
@@ -559,6 +562,12 @@ final class XcodeProjectGenerator {
       let bazelSettingsProvider = workspaceInfoExtractor.bazelSettingsProvider
       let startupOptions = bazelSettingsProvider.universalFlags.startup
       generator.generateSwiftLintTarget(swiftlintScriptPath, workingDirectory: workingDirectory,
+                                        startupOptions: startupOptions)
+    }
+    profileAction("generating_pmd_cpd_target") {
+      let bazelSettingsProvider = workspaceInfoExtractor.bazelSettingsProvider
+      let startupOptions = bazelSettingsProvider.universalFlags.startup
+      generator.generatePMD_CPDTarget(pMD_CPDScriptPath, workingDirectory: workingDirectory,
                                         startupOptions: startupOptions)
     }
     profileAction("generating_top_level_build_configs") {
@@ -1380,6 +1389,7 @@ final class XcodeProjectGenerator {
       installFiles([(resourceURLs.buildScript, XcodeProjectGenerator.BuildScript),
                     (resourceURLs.cleanScript, XcodeProjectGenerator.CleanScript),
                     (resourceURLs.swiftlintScript, XcodeProjectGenerator.SwiftLintScript),
+                    (resourceURLs.pMD_CPDScript, XcodeProjectGenerator.PMD_CPDScript),
                     (resourceURLs.codeCoverageReportScript, XcodeProjectGenerator.CodeCoverageReportScript),
                    ],
                    toDirectory: scriptDirectoryURL)
