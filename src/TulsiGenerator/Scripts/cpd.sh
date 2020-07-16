@@ -22,20 +22,29 @@
 set -eu
 
 (
-  set -x
+  set +x
   if [ -f tools/cpd.sh ]; then
-    make cpd &> /dev/null
+    make cpd_dir SCAN_DIR=${3:-.} &> /dev/null
     cd out_cpd
     echo "
 <?php
+\$total = 0;
 foreach (simplexml_load_file('result.xml')->duplication as \$duplication) {
     \$files = \$duplication->xpath('file');
+    \$lines = \$duplication['lines'];
+    \$total += intval(\$lines);
     foreach (\$files as \$file) {
-        echo \$file['path'].':'.\$file['line'].':1: warning: '.\$duplication['lines'].' copy-pasted lines from: '
+        \$start_line = intval(\$file['line']) + 1;
+        \$end_line = \$start_line + intval(\$duplication['lines']) - 1;
+        \$output = \$file['path'].':'.\$start_line.':1: warning: [START] '.\$duplication['lines'].' copy-pasted lines from: '
             .implode(', ', array_map(function (\$otherFile) { return \$otherFile['path'].':'.\$otherFile['line']; },
             array_filter(\$files, function (\$f) use (&\$file) { return \$f != \$file; }))).PHP_EOL;
+        \$output = \$output.\$file['path'].':'.\$end_line.':1: warning: [END] '.\$duplication['lines'].' copy-pasted lines from: '.implode(', ', array_map(function (\$otherFile) { return \$otherFile['path'].':'.\$otherFile['line']; },
+            array_filter(\$files, function (\$f) use (&\$file) { return \$f != \$file; }))).PHP_EOL;
+        echo \$output;
     }
 }
+echo 'warning: Total number of duplication: '.intval(\$total / 2).' lines'.PHP_EOL;
 ?>
 " > parse_cpd_outout.php
     php parse_cpd_outout.php
