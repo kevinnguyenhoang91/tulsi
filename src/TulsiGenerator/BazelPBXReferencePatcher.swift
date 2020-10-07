@@ -63,7 +63,10 @@ final class BazelPBXReferencePatcher {
     guard let externalGroup = mainGroup.childGroupsByName["external"] else { return }
     mainGroup.removeChild(externalGroup)
     
-    let externalGroupResolvedPath = resolvePathFromBazelExecRoot("external")
+    // let externalGroupResolvedPath = resolvePathFromBazelExecRoot("external")
+    let externalGroupURL = URL(fileURLWithPath: "\(bazelExecRoot)/../../external", isDirectory: true)
+    let externalGroupResolvedPath = externalGroupURL.resolvingSymlinksInPath().path
+    
     let newExternalGroup = mainGroup.getOrCreateChildGroupByName("external",
                                                                   path: externalGroupResolvedPath,
                                                                   sourceTree: .Group)
@@ -85,7 +88,10 @@ final class BazelPBXReferencePatcher {
     guard let externalGroup = mainGroup.childGroupsByName["external"] else { return }
     mainGroup.removeChild(externalGroup)
     
-    let externalGroupResolvedPath = resolvePathFromBazelExecRoot("external")
+    // let externalGroupResolvedPath = resolvePathFromBazelExecRoot("external")
+    let externalGroupURL = URL(fileURLWithPath: "\(bazelExecRoot)/../../external", isDirectory: true)
+    let externalGroupResolvedPath = externalGroupURL.resolvingSymlinksInPath().path
+    
     let newExternalGroup = mainGroup.getOrCreateChildGroupByName("external",
                                                                  path: externalGroupResolvedPath,
                                                                  sourceTree: .Group)
