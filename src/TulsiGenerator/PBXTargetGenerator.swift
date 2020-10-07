@@ -735,7 +735,9 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
     }
 
     for (name, data) in staticIndexers {
-      generateIndexer(name, indexerType: PBXTarget.ProductType.StaticLibrary, data: data)
+      if !name.hasSuffix("NeedleGen_SwiftSources") {
+        generateIndexer(name, indexerType: PBXTarget.ProductType.StaticLibrary, data: data)
+      }
     }
 
     for (name, data) in frameworkIndexers {
