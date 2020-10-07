@@ -1767,7 +1767,7 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
     guard let pbxTargetType = entry.pbxTargetType else {
       throw ProjectSerializationError.unsupportedTargetType(entry.type, entry.label.value)
     }
-    let target = project.createNativeTarget(name,
+    let target = project.createNativeTarget(name + "-Bazel",
                                             deploymentTarget: entry.deploymentTarget,
                                             targetType: pbxTargetType)
 
