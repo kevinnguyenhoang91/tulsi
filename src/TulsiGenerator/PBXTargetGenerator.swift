@@ -797,8 +797,10 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
     // so that it is using the same local file system as the project to maximize performance.
     // In some cases where the workspace was on a remote volume, jumping through the symlink on the
     // remote volume that pointed back to local disk was causing performance issues.
+    // buildSettings["\(PBXTargetGenerator.BazelWorkspaceSymlinkVarName)"] =
+    //     "$(PROJECT_FILE_PATH)/.tulsi/\(PBXTargetGenerator.TulsiWorkspacePath)"
     buildSettings["\(PBXTargetGenerator.BazelWorkspaceSymlinkVarName)"] =
-        "$(PROJECT_FILE_PATH)/.tulsi/\(PBXTargetGenerator.TulsiWorkspacePath)"
+        "${\(PBXTargetGenerator.WorkspaceRootVarName)}/\(PBXTargetGenerator.TulsiWorkspacePath)"
 
     buildSettings["TULSI_VERSION"] = tulsiVersion
 
