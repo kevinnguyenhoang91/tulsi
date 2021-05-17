@@ -726,7 +726,7 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
 
   @discardableResult
   func generateIndexerTargets() -> [String: PBXTarget] {
-    mergeRegisteredIndexers()
+    // mergeRegisteredIndexers()
 
     func generateIndexer(_ name: String,
                          indexerType: PBXTarget.ProductType,
