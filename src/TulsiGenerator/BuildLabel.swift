@@ -54,7 +54,7 @@ public class BuildLabel: Comparable, Equatable, Hashable, CustomStringConvertibl
     if package.starts(with: "@") {
       package = "external/" + package.suffix(from: package.index(package.startIndex, offsetBy: 1))
     }
-    return "\(package)/\(target)"
+    return "\(package)/\(target)".replacingOccurrences(of: "//", with: "/")
   }()
 
   public lazy var asFullPBXTargetName: String? = { [unowned self] in

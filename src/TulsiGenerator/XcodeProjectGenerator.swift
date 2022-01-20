@@ -534,7 +534,10 @@ final class XcodeProjectGenerator {
        includeSkylarkSources {
       profileAction("adding_buildfiles") {
         let buildfiles = workspaceInfoExtractor.extractBuildfiles(expandedTargetLabels)
-        let paths = buildfiles.map() { $0.asFileName! }
+        let paths = buildfiles.map() { buildfile -> String in
+          localizedMessageLogger.infoMessage(buildfile.asFileName!)
+          return buildfile.asFileName!
+        }
         generator.generateFileReferencesForFilePaths(paths, pathFilters: config.pathFilters)
       }
     }
