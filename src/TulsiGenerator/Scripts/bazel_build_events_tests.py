@@ -15,7 +15,7 @@
 """Test for bazel_build_events.py."""
 
 import json
-import StringIO
+from io import StringIO
 import unittest
 
 import bazel_build_events

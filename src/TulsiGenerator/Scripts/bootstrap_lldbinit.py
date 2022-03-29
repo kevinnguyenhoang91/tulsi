@@ -17,7 +17,7 @@
 
 import os
 import shutil
-import StringIO
+from io import StringIO
 import sys
 
 
