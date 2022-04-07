@@ -23,6 +23,10 @@ import os
 import subprocess
 import sys
 
+# Hide warning in Python 3
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 def _ParseFile(filename):
   """Parses the given file and returns a mapping of extensions to utis."""

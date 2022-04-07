@@ -45,6 +45,10 @@ from bootstrap_lldbinit import TULSI_LLDBINIT_FILE
 import tulsi_logging
 from update_symbol_cache import UpdateSymbolCache
 
+# Hide warning in Python 3
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # List of frameworks that Xcode injects into test host targets that should be
 # re-signed when running the tests on devices.
