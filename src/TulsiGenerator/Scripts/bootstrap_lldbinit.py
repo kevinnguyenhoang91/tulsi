@@ -140,7 +140,7 @@ class BootstrapLLDBInit(object):
                                                         source_string,
                                                         add_source_string)
 
-    out = StringIO.StringIO()
+    out = StringIO()
 
     if add_source_string:
       if return_code == CHANGE_NEEDED:
