@@ -34,7 +34,7 @@ def _ParseFile(filename):
       'plutil', '-convert', 'xml1', '-o', '-', filename
   ])
   result = dict()
-  entry_list = plistlib.readPlistFromString(xml_content)
+  entry_list = plistlib.readPlistFromString(xml_content.decode())
   assert type(entry_list) is list
   for entry in entry_list:
     identifier = entry.get('Identifier')
@@ -49,7 +49,7 @@ def _ParseFile(filename):
 def main(args):
   xcode_path = os.path.abspath(args[1])
   files = subprocess.check_output(['find', xcode_path, '-name', '*.pbfilespec'])
-  files = [f for f in files.split('\n') if f.strip()]
+  files = [f for f in files.decode().split('\n') if f.strip()]
   extensions_to_uti = dict()
   for filename in files:
     extensions_to_uti.update(_ParseFile(filename))

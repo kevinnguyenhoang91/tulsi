@@ -1359,7 +1359,7 @@ class BazelBuildBridge(object):
     returncode, output = self._RunSubprocess(command)
     timer.End()
     if returncode:
-      _PrintXcodeError('Re-sign command %r failed. %s' % (command, output))
+      _PrintXcodeError('Re-sign command %r failed. %s' % (command, output.decode()))
       return 800 + returncode
     return 0
 
@@ -1480,7 +1480,7 @@ class BazelBuildBridge(object):
                                      stderr=subprocess.STDOUT)
     timer.End()
 
-    bundle_attributes = CodesignBundleAttributes(output)
+    bundle_attributes = CodesignBundleAttributes(output.decode())
     self.codesign_attributes[signed_bundle] = bundle_attributes
     return bundle_attributes.Get(attribute)
 
@@ -1619,7 +1619,7 @@ class BazelBuildBridge(object):
     # /Applications/Calendar.app/Contents/MacOS/Calendar"
 
     uuids_found = []
-    for dwarfdump_output in output.split('\n'):
+    for dwarfdump_output in output.decode().split('\n'):
       if not dwarfdump_output:
         continue
       found_output = re.match(r'^(?:UUID: )([^ ]+) \(([^)]+)', dwarfdump_output)
