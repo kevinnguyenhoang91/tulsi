@@ -59,14 +59,14 @@ final class BazelPBXReferencePatcher {
 
   func patchExternalRepositoryReferencesAlternative(_ xcodeProject: PBXProject, _ bazelExecRoot: String) {
     let mainGroup = xcodeProject.mainGroup
-    
+
     guard let externalGroup = mainGroup.childGroupsByName["external"] else { return }
     mainGroup.removeChild(externalGroup)
-    
+
     // let externalGroupResolvedPath = resolvePathFromBazelExecRoot("external")
     let externalGroupURL = URL(fileURLWithPath: "\(bazelExecRoot)/../../external", isDirectory: true)
     let externalGroupResolvedPath = externalGroupURL.resolvingSymlinksInPath().path
-    
+
     let newExternalGroup = mainGroup.getOrCreateChildGroupByName("external",
                                                                   path: externalGroupResolvedPath,
                                                                   sourceTree: .Group)
@@ -81,17 +81,17 @@ final class BazelPBXReferencePatcher {
       newChild.migrateChildrenOfGroup(child)
     }
   }
-  
+
   func patchExternalRepositoryReferencesVersioning(_ xcodeProject: PBXProject, _ bazelExecRoot: String) {
     let mainGroup = xcodeProject.mainGroup
-    
+
     guard let externalGroup = mainGroup.childGroupsByName["external"] else { return }
     mainGroup.removeChild(externalGroup)
-    
+
     // let externalGroupResolvedPath = resolvePathFromBazelExecRoot("external")
     let externalGroupURL = URL(fileURLWithPath: "\(bazelExecRoot)/../../external", isDirectory: true)
     let externalGroupResolvedPath = externalGroupURL.resolvingSymlinksInPath().path
-    
+
     let newExternalGroup = mainGroup.getOrCreateChildGroupByName("external",
                                                                  path: externalGroupResolvedPath,
                                                                  sourceTree: .Group)
@@ -102,8 +102,8 @@ final class BazelPBXReferencePatcher {
     for child in childGroups {
       let childPathURL = URL(fileURLWithPath: "\(bazelExecRoot)/../../external/\(child.name)", isDirectory: false)
       let resolvedPath = childPathURL.resolvingSymlinksInPath().path
-      
-      if !resolvedPath.hasPrefix("/var/") {
+
+      if (!resolvedPath.hasPrefix("/var/") && !resolvedPath.hasPrefix("/Volumes/")) {
         let newChild = mainGroup.getOrCreateChildGroupByName(child.name,
                                                              path: resolvedPath,
                                                              sourceTree: .Group)
