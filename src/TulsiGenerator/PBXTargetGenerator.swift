@@ -98,6 +98,18 @@ protocol PBXTargetGeneratorProtocol: AnyObject {
   func generateBazelCleanTarget(_ scriptPath: String, workingDirectory: String,
                                 startupOptions: [String])
 
+  /// Generates a legacy target that invokes SwiftLint on demand
+  func generateSwiftLintTarget(_ scriptPath: String, workingDirectory: String,
+                               startupOptions: [String])
+
+  /// Generates a legacy target that invokes PMD_CPD on demand
+  func generatePMD_CPDTarget(_ scriptPath: String, workingDirectory: String,
+                               startupOptions: [String])
+
+  /// Generates a legacy target that invokes Code coverage report generating on demand
+  func generateCodeCoverageReportTarget(_ name: String, _ scriptPath: String, workingDirectory: String,
+                                        startupOptions: [String]) -> PBXLegacyTarget?
+
   /// Generates project-level build configurations.
   func generateTopLevelBuildConfigurations(_ buildSettingOverrides: [String: String])
 
@@ -114,6 +126,13 @@ protocol PBXTargetGeneratorProtocol: AnyObject {
     ruleEntryMap: RuleEntryMap,
     pathFilters: Set<String>?
   ) throws -> [BuildLabel: PBXNativeTarget]
+
+  /// Generates Xcode coverage targets that invoke Bazel for the given targets. For test-type rules,
+  /// non-compiling source file linkages are created to facilitate indexing of XCTests.
+  /// Throws if one of the RuleEntry instances is for an unsupported Bazel target type.
+  func generateCodeCoverageTargetsForRuleEntries(_ entries: Set<RuleEntry>,
+                                                 codeCoverageReportScriptPath: String,
+                                                 workingDirectory: String) throws
 }
 
 extension PBXTargetGeneratorProtocol {
@@ -169,6 +188,15 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
   /// actions.
   static let BazelCleanTarget = "_bazel_clean_"
 
+    /// Name of the legacy target that will be used to run SwiftLint
+  static let SwiftLintTarget = "_swiftlint_"
+
+    /// Name of the legacy target that will be used to run PMD_CPD
+  static let PMD_CPDTarget = "_copy_paste_detector_"
+
+    /// Name of the legacy target that will be used to run Code Coverage
+  static let CodeCoverageReportTarget = "_code_coverage_"
+
   /// Xcode variable name used to refer to the workspace root.
   static let WorkspaceRootVarName = "TULSI_WR"
 
@@ -220,6 +248,10 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
   let suppressCompilerDefines: Bool
 
   var bazelCleanScriptTarget: PBXLegacyTarget? = nil
+
+  var bazelSwiftLintTarget: PBXLegacyTarget? = nil
+
+  var bazelPMD_CPDTarget: PBXLegacyTarget? = nil
 
   /// Stores data about a given RuleEntry to be used in order to generate Xcode indexer targets.
   private struct IndexerData {
@@ -343,6 +375,19 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
       let newName = indexerNameInfo + other.indexerNameInfo
       let newBuildPhase = PBXSourcesBuildPhase()
       newBuildPhase.files = buildPhase.files + other.buildPhase.files
+
+      var seenPaths: [String] = []
+      var newList: [PBXBuildFile] = []
+      for file in newBuildPhase.files {
+        if let path = file.fileRef.path {
+          if !seenPaths.contains(path) {
+            newList.append(file)
+            seenPaths.append(path)
+          }
+        }
+      }
+
+      newBuildPhase.files = newList
 
       return IndexerData(indexerNameInfo: newName,
                          dependencies: newDependencies,
@@ -472,6 +517,10 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
     self.localizedMessageLogger = localizedMessageLogger
     self.workspaceRootURL = workspaceRootURL
     self.suppressCompilerDefines = suppressCompilerDefines
+  }
+
+  private func enabledFeatures() -> Set<BazelSettingFeature> {
+    return BazelBuildSettingsFeatures.enabledFeatures(options: options)
   }
 
   func generateFileReferencesForFilePaths(_ paths: [String], pathFilters: Set<String>?) {
@@ -685,7 +734,7 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
 
   @discardableResult
   func generateIndexerTargets() -> [String: PBXTarget] {
-    mergeRegisteredIndexers()
+    // mergeRegisteredIndexers()
 
     func generateIndexer(_ name: String,
                          indexerType: PBXTarget.ProductType,
@@ -703,7 +752,9 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
     }
 
     for (name, data) in staticIndexers {
-      generateIndexer(name, indexerType: PBXTarget.ProductType.StaticLibrary, data: data)
+      if !name.hasSuffix("NeedleGen_SwiftSources") {
+        generateIndexer(name, indexerType: PBXTarget.ProductType.StaticLibrary, data: data)
+      }
     }
 
     for (name, data) in frameworkIndexers {
@@ -758,6 +809,47 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
                                 inProject: project,
                                 first: true)
     }
+  }
+
+  func generateSwiftLintTarget(_ scriptPath: String, workingDirectory: String = "",
+                               startupOptions: [String] = []) {
+    assert(bazelSwiftLintTarget == nil, "generateSwiftLintTarget may only be called once")
+
+    let allArgs = [bazelPath, bazelBinPath] + startupOptions
+    let buildArgs = allArgs.map { "\"\($0)\""}.joined(separator: " ")
+
+    bazelSwiftLintTarget = project.createLegacyTarget(PBXTargetGenerator.SwiftLintTarget,
+                                                        deploymentTarget: nil,
+                                                        buildToolPath: "\(scriptPath)",
+                                                        buildArguments: buildArgs,
+                                                        buildWorkingDirectory: workingDirectory)
+  }
+
+  func generatePMD_CPDTarget(_ scriptPath: String, workingDirectory: String = "",
+                               startupOptions: [String] = []) {
+    assert(bazelPMD_CPDTarget == nil, "generatePMD_CPDTarget may only be called once")
+
+    let allArgs = [bazelPath, bazelBinPath] + startupOptions
+    let buildArgs = allArgs.map { "\"\($0)\""}.joined(separator: " ")
+
+    bazelPMD_CPDTarget = project.createLegacyTarget(PBXTargetGenerator.PMD_CPDTarget,
+                                                        deploymentTarget: nil,
+                                                        buildToolPath: "\(scriptPath)",
+                                                        buildArguments: buildArgs,
+                                                        buildWorkingDirectory: workingDirectory)
+  }
+
+  func generateCodeCoverageReportTarget(_ name: String, _ scriptPath: String, workingDirectory: String = "",
+                                        startupOptions: [String] = []) -> PBXLegacyTarget? {
+
+    let allArgs = startupOptions
+    let buildArgs = allArgs.map { "\"\($0)\""}.joined(separator: " ")
+
+    return project.createLegacyTarget(name + PBXTargetGenerator.CodeCoverageReportTarget,
+                                      deploymentTarget: nil,
+                                      buildToolPath: "\(scriptPath)",
+                                      buildArguments: buildArgs,
+                                      buildWorkingDirectory: workingDirectory)
   }
 
   func generateTopLevelBuildConfigurations(_ buildSettingOverrides: [String: String] = [:]) {
@@ -922,6 +1014,38 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
                        pathFilters: pathFilters)
     }
     return targetsByLabel
+  }
+
+  /// Generates code coverage targets for the given rule entries.
+  func generateCodeCoverageTargetsForRuleEntries(_ ruleEntries: Set<RuleEntry>,
+                                                 codeCoverageReportScriptPath: String,
+                                                 workingDirectory: String) throws {
+    guard enabledFeatures().contains(.HTMLCodeCoverage) else { return }
+
+    let namedRuleEntries = generateUniqueNamesForRuleEntries(ruleEntries)
+
+    let progressNotifier = ProgressNotifier(name: GeneratingCodeCoverageTargets,
+                                            maxValue: namedRuleEntries.count)
+
+    for (name, entry) in namedRuleEntries {
+      progressNotifier.incrementValue()
+
+      if entry.pbxTargetType?.isTest ?? false {
+        var targetName = entry.label.targetName ?? ""
+
+        let coverageRegexes = codeCoverageFilterRegexes(for: entry)
+        var coverageFilterRegex = ""
+        if let regexVar = coverageRegexes[targetName] {
+          coverageFilterRegex = regexVar
+          let coverageIgnoreRegex = codeCoverageIgnoreFilterRegexes(for: entry)
+          let startupOptions = [coverageFilterRegex, coverageIgnoreRegex, targetName]
+          generateCodeCoverageReportTarget(name,
+                                          codeCoverageReportScriptPath,
+                                          workingDirectory: workingDirectory,
+                                          startupOptions: startupOptions)
+        }
+      }
+    }
   }
 
   // MARK: - Private methods
@@ -1320,6 +1444,12 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
       let testBuildPhase = createGenerateSwiftDummyFilesTestBuildPhase()
       target.buildPhases.append(testBuildPhase)
     }
+
+    if enabledFeatures().contains(.HTMLCodeCoverage) {
+      let cleanProfileDataPhase = createCleanCodeCoverageProfileDataBuildPhase()
+      target.buildPhases.append(cleanProfileDataPhase)
+    }
+
     if !testSourceFileInfos.isEmpty || !testNonArcSourceFileInfos.isEmpty {
       // Create dummy dependency files for non-Swift code as Xcode expects Clang to generate them.
       let allSources = testSourceFileInfos + testNonArcSourceFileInfos
@@ -1353,7 +1483,7 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
           // We refer to files in external workspaces via their more stable location in output base
           // <output base>/external remains between builds and contains all external workspaces
           // <execution root>/external is instead torn down on each build, breaking the paths to
-          // any external workspaces not used in the particular target being built 
+          // any external workspaces not used in the particular target being built
           prefixVar = PBXTargetGenerator.BazelOutputBaseSymlinkVarName
         } else {
           prefixVar = PBXTargetGenerator.WorkspaceRootVarName
@@ -1375,6 +1505,14 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
       let fullPath = module.fullPath as NSString
       let includePath = fullPath.deletingLastPathComponent
       swiftIncludes.add("$(\(PBXTargetGenerator.BazelExecutionRootSymlinkVarName))/\(includePath)")
+    }
+
+    for module in ruleEntry.objCModuleMaps {
+      let fullPath = module.fullPath as NSString
+      let includePath = fullPath.deletingLastPathComponent
+      if includePath.contains(".framework") {
+        swiftIncludes.add("$(\(PBXTargetGenerator.BazelExecutionRootSymlinkVarName))/\(includePath)")
+      }
     }
   }
 
@@ -1606,10 +1744,11 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
     } else {
       normalizedTargetName = targetName
     }
-    if let suffix = suffix {
-      return String(format: "\(IndexerTargetPrefix)\(normalizedTargetName)_%08X_%@", hash, suffix)
-    }
-    return String(format: "\(IndexerTargetPrefix)\(normalizedTargetName)_%08X", hash)
+    // if let suffix = suffix {
+    //   return String(format: "\(IndexerTargetPrefix)\(normalizedTargetName)_%08X_%@", hash, suffix)
+    // }
+    // return String(format: "\(IndexerTargetPrefix)\(normalizedTargetName)_%08X", hash)
+    return String(format: "\(normalizedTargetName)")
   }
 
   // Creates a PBXSourcesBuildPhase with the given references, optionally applying the given
@@ -1641,7 +1780,7 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
     guard let pbxTargetType = entry.pbxTargetType else {
       throw ProjectSerializationError.unsupportedTargetType(entry.type, entry.label.value)
     }
-    let target = project.createNativeTarget(name,
+    let target = project.createNativeTarget(name + "-Bazel",
                                             deploymentTarget: entry.deploymentTarget,
                                             targetType: pbxTargetType)
 
@@ -1736,6 +1875,50 @@ final class PBXTargetGenerator: PBXTargetGeneratorProtocol {
     buildPhase.showEnvVarsInLog = true
     buildPhase.mnemonic = "SwiftDummy"
     return buildPhase
+  }
+
+  private func createCleanCodeCoverageProfileDataBuildPhase() -> PBXShellScriptBuildPhase {
+    let shellScript =
+        "# Script to clean ProfileData folder in Product folder.\n" +
+        "set -eu\n" +
+        "rm -rf \"$BUILT_PRODUCTS_DIR/../../ProfileData\" || true"
+
+    let buildPhase = PBXShellScriptBuildPhase(shellScript: shellScript, shellPath: "/bin/bash")
+    buildPhase.showEnvVarsInLog = true
+    buildPhase.mnemonic = "CleanCoverageProfileData"
+    return buildPhase
+  }
+
+  func environmentVariables(for ruleEntry: RuleEntry) -> [String: String] {
+    var environmentVariables: [String: String] = [:]
+    options[.EnvironmentVariables, ruleEntry.label.value]?.components(separatedBy: .newlines).forEach() { keyValueString in
+      let components = keyValueString.components(separatedBy: "=")
+      let key = components.first ?? ""
+      if !key.isEmpty {
+        let value = components[1..<components.count].joined(separator: "=")
+        environmentVariables[key] = value
+      }
+    }
+    return environmentVariables
+  }
+
+  func codeCoverageFilterRegexes(for ruleEntry: RuleEntry) -> [String: String] {
+    var codeCoverageFilterRegexes: [String: String] = [:]
+    options[.CodeCoverageFilterRegex, ruleEntry.label.value]?.components(separatedBy: ",").forEach() { keyValueString in
+      let components = keyValueString.components(separatedBy: "=")
+      let key = components.first ?? ""
+      if !key.isEmpty {
+        let value = components[1..<components.count].joined(separator: "=")
+        codeCoverageFilterRegexes[key] = value
+      }
+    }
+    return codeCoverageFilterRegexes
+  }
+
+  func codeCoverageIgnoreFilterRegexes(for ruleEntry: RuleEntry) -> String {
+    var codeCoverageIgnoreFilterRegexes = options[.CodeCoverageIgnoreFilterRegex, ruleEntry.label.value] ?? ""
+    if codeCoverageIgnoreFilterRegexes != "" { codeCoverageIgnoreFilterRegexes += "|" }
+    return codeCoverageIgnoreFilterRegexes + ".*bazel-out.*"
   }
 
   private func createGenerateDummyDependencyFilesTestBuildPhase(_ sources: [BazelFileInfo]) -> PBXShellScriptBuildPhase {

@@ -45,6 +45,10 @@ from bootstrap_lldbinit import TULSI_LLDBINIT_FILE
 import tulsi_logging
 from update_symbol_cache import UpdateSymbolCache
 
+# Hide warning in Python 3
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # List of frameworks that Xcode injects into test host targets that should be
 # re-signed when running the tests on devices.
@@ -791,6 +795,14 @@ class BazelBuildBridge(object):
         output_line = PatchBazelDiagnosticStatements(output_line)
         if xcode_parsable_line_regex.match(output_line):
           output_line = '%s/%s' % (self.workspace_root, output_line)
+        if output_line.startswith("warning:") and output_line.endswith(".pcm: No such file or directory"):
+            output_line = ""
+        if output_line.startswith("warning:") and output_line.find("cronet") > -1 and output_line.find("unable to open object file") > -1:
+            output_line = ""
+        if output_line.startswith("note:") and output_line.find("swift_module_cache") > -1 and output_line.find(".pcm") > -1:
+            output_line = ""
+        if output_line.find(": in") > -1:
+            output_line = ""
         return output_line
       patch_xcode_parsable_line = PatchOutputLine
     else:
@@ -1180,6 +1192,7 @@ class BazelBuildBridge(object):
       subprocess.check_output(['rsync',
                                '-vcrlpgoD',
                                '--delete',
+                               '--chmod=ugo=rwX',
                                full_source_path,
                                output_path],
                               stderr=subprocess.STDOUT)
@@ -1575,8 +1588,9 @@ class BazelBuildBridge(object):
         out.write('settings clear target.source-map\n')
         return 0
 
+      source_maps_lldb = []
       if self.normalized_prefix_map:
-        source_map = ('./', workspace_root)
+        source_maps_lldb.append(('./', self._NormalizePath(self.workspace_root)))
         out.write('# This maps the normalized root to that used by '
                   '%r.\n' % project_basename)
       else:
@@ -1588,11 +1602,16 @@ class BazelBuildBridge(object):
         # If we had multiple remappings, it would not make sense for the
         # two APIs to share the same mappings. They have very different
         # side-effects in how they individually handle debug information.
-        source_map = self._ExtractTargetSourceMap()
+        source_maps_lldb = [self._ExtractTargetSourceMap()]
         out.write('# This maps Bazel\'s execution root to that used by '
                   '%r.\n' % project_basename)
 
-      out.write('settings set target.source-map "%s" "%s"\n' % source_map)
+      out.write('settings set target.source-map')
+      for source_map in source_maps_lldb:
+        key, path = source_map
+        if os.path.exists(path):
+          out.write(' "%s" "%s"' % source_map)
+      out.write('\n')
 
     return 0
 
