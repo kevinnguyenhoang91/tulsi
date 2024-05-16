@@ -1243,7 +1243,7 @@ def _tulsi_outputs_aspect(target, ctx):
         artifacts = [
             x
             for x in target.files.to_list()
-            if x.extension == "a"
+            if (x.extension == "a" or x.extension == "lo")
         ]
         if len(artifacts) > 0:
             artifact = artifacts[0].path

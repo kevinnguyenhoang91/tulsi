@@ -82,26 +82,38 @@ final class BazelXcodeProjectPatcher {
     }
   }
 
-  // Handles patching any groups that were generated under Bazel's magical "external" container to
-  // proper filesystem references. This should be called after patchBazelRelativeReferences.
-  func patchExternalRepositoryReferences(_ xcodeProject: PBXProject) {
+  func patchExternalRepositoryReferences(_ xcodeProject: PBXProject, _ bazelExecRoot: String, _ workspaceRootURL : URL) {
     let mainGroup = xcodeProject.mainGroup
+
     guard let externalGroup = mainGroup.childGroupsByName["external"] else { return }
+    mainGroup.removeChild(externalGroup)
+
+    // let externalGroupResolvedPath = resolvePathFromBazelExecRoot("external")
+    let externalGroupURL = URL(fileURLWithPath: "\(bazelExecRoot)/../../external", isDirectory: true)
+    let externalGroupResolvedPath = externalGroupURL.resolvingSymlinksInPath().path
+
+    let newExternalGroup = mainGroup.getOrCreateChildGroupByName("external",
+                                                                 path: externalGroupResolvedPath,
+                                                                 sourceTree: .Group)
 
     // The external directory may contain files such as a WORKSPACE file, but we only patch folders
     let childGroups = externalGroup.children.filter { $0 is PBXGroup } as! [PBXGroup]
 
     for child in childGroups {
-      // Resolve external workspaces via their more stable location in output base
-      // <output base>/external remains between builds and contains all external workspaces
-      // <execution root>/external is instead torn down on each build, breaking the paths to any
-      // external workspaces not used in the particular target being built 
-      let resolvedPath = "\(xcodeProject.name).xcodeproj/\(PBXTargetGenerator.TulsiOutputBaseSymlinkPath)/external/\(child.name)"
-      let newChild = mainGroup.getOrCreateChildGroupByName("@\(child.name)",
-                                                           path: resolvedPath,
-                                                           sourceTree: .SourceRoot)
+      let childPathURL = URL(fileURLWithPath: "\(bazelExecRoot)/../../external/\(child.name)", isDirectory: false)
+      let resolvedPath = childPathURL.resolvingSymlinksInPath().path
+
+      // if resolvedPath.contains(workspaceRootURL.path) {
+      //   let newChild = mainGroup.getOrCreateChildGroupByName(child.name,
+      //                                                        path: resolvedPath,
+      //                                                        sourceTree: .Group)
+      //   newChild.migrateChildrenOfGroup(child)
+      // } else {
+      let newChild = newExternalGroup.getOrCreateChildGroupByName(child.name,
+                                                                  path: resolvedPath,
+                                                                  sourceTree: .Group)
       newChild.migrateChildrenOfGroup(child)
+      // }
     }
-    mainGroup.removeChild(externalGroup)
   }
 }

@@ -42,6 +42,8 @@ class XcodeProjectGeneratorTests: XCTestCase {
     buildScript: URL(fileURLWithPath: "/scripts/Build"),
     resignerScript: URL(fileURLWithPath: "/scripts/Resigner"),
     cleanScript: URL(fileURLWithPath: "/scripts/Clean"),
+    swiftlintScript: URL(fileURLWithPath: "/scripts/SwiftLint"),
+    pMD_CPDScript: URL(fileURLWithPath: "/scripts/PMD_CPDScript"),
     extraBuildScripts: [URL(fileURLWithPath: "/scripts/Logging")],
     iOSUIRunnerEntitlements: URL(
       fileURLWithPath: "/generatedProjectResources/iOSXCTRunner.entitlements"),
@@ -633,6 +635,14 @@ final class MockPBXTargetGenerator: PBXTargetGeneratorProtocol {
     _ scriptPath: String, workingDirectory: String,
     startupOptions: [String]
   ) {
+  }
+  
+  func generateSwiftLintTarget(_ scriptPath: String, workingDirectory: String,
+                               startupOptions: [String]) {
+  }
+  
+  func generatePMD_CPDTarget(_ scriptPath: String, workingDirectory: String,
+                               startupOptions: [String]) {
   }
 
   func generateTopLevelBuildConfigurations(_ buildSettingOverrides: [String: String]) {

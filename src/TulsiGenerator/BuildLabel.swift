@@ -56,7 +56,7 @@ public class BuildLabel: Comparable, Equatable, Hashable, CustomStringConvertibl
         package.suffix(from: package.index(package.startIndex, offsetBy: 1)) // Munch @ prefix
           .replacingOccurrences(of: "//", with: "/") // Fixup //. Xcode can't handle paths like that.
     }
-    return "\(package)/\(target)"
+    return "\(package)/\(target)".replacingOccurrences(of: "//", with: "/")
   }()
 
   public lazy var asFullPBXTargetName: String? = { [unowned self] in

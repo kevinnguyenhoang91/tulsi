@@ -836,7 +836,7 @@ class PBXTarget: PBXObjectProtocol, Hashable {
     func productName(_ name: String) -> String {
       switch self {
         case .StaticLibrary:
-          return "lib\(name).a"
+          return "lib\(name).lo"
 
         case .DynamicLibrary:
           return "lib\(name).dylib"
